@@ -91,7 +91,7 @@ If no elements fall in a sliding time window, that window will be
 empty (an empty Iterable).
 
 To use the library's
-**[toSlidingWindows](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/TimeWindow.htmlcom/scaleoutsoftware/streaming/timewindowing/Windowing.html#toSlidingWindows-java.util.List-com.scaleoutsoftware.streaming.timewindowing.TimestampSelector-long-long-long-long-)**
+**[toSlidingWindows](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/Windowing.html#toSlidingWindows-java.util.List-com.scaleoutsoftware.streaming.timewindowing.TimestampSelector-long-long-long-long-)**
 method, the source collection *must* be sorted chronologically. (See
 the [Wrapper Classes](#WrapperClasses) section below for details on
 convenient wrapper classes that keep your source collection sorted.)
