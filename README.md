@@ -24,8 +24,8 @@ operate on any `List<T>` collection.
 	List<HeartRate> readings = [...time-ordered readings populated here, one per minute]
 	long end = [...current time]
 	long start = end - 86400000; // go back 24 hours in Millis
-	long every = 300000;
-	long duration = 60000;
+	long every = 60000;
+	long duration = 300000;
 	
     Iterable<TimeWindow<HeartRate>> slidingWindows = Windowing.toSlidingWindows(
 		readings,
