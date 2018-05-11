@@ -144,6 +144,24 @@ public class WindowingTests {
     }
 
     @Test
+    public void TestUtilsAddToFront() {
+        ArrayList<TestObject> list = new ArrayList<>(25);
+        long start = System.currentTimeMillis();
+        long every = 1000L;
+        long duration = 2500L;
+        SlidingWindowCollection<TestObject> swc = new SlidingWindowCollection<TestObject>(list,
+                test -> test.getTimestamp(),
+                duration,
+                every,
+                start);
+        long addToFront = System.currentTimeMillis();
+        swc.add(new TestObject(System.currentTimeMillis() + 1000L));
+        swc.add(new TestObject(addToFront));
+        Assert.assertTrue(list.size() == 2);
+        Assert.assertTrue(list.get(0).getTimestamp() == addToFront);
+    }
+
+    @Test
     public void testEviction() {
         int numElements = 100;
         long start = System.nanoTime();

@@ -33,16 +33,21 @@ public class Utils {
         int index = source.size() - 1;
         long timeToAdd = selector.select(toAdd);
         long last = selector.select(source.get(index));
-        if(timeToAdd < last) {
-            while(timeToAdd < last) {
-                index--;
-                last = selector.select(source.get(index));
-            }
-            source.add(index++, toAdd);
-        } else {
-            source.add(toAdd);
-        }
 
+        if(timeToAdd < last) {
+            while(index > 0) {
+                if(timeToAdd < last) {
+                    index--;
+                    last = selector.select(source.get(index));
+                } else {
+                    index++;
+                    break;
+                }
+            }
+            source.add(index, toAdd);
+        } else {
+            source.add(++index, toAdd);
+        }
     }
 
     /**
