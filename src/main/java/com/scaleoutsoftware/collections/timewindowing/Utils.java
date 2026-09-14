@@ -270,7 +270,10 @@ public class Utils {
 
             SessionTimeWindow<T> window = new SessionTimeWindow<T>(timeoutMs, sessionStartTimeMs, sessionEndTimeMs, itemsInWindow);
 
-            windowClosedHandler.onWindowClosed(window);
+            // TODO
+            if(windowClosedHandler != null) {
+                windowClosedHandler.onWindowClosed(window);
+            }
             evictionIdx = currentIdx;
 
             /*
