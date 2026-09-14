@@ -35,6 +35,13 @@ class SessionTimeWindow<T> implements TimeWindow<T> {
         _endTime    = 0;
     }
 
+    public SessionTimeWindow(long timeoutMs, long startTimeMs, long endTimeMs, List<T> items) {
+        _timeout    = timeoutMs;
+        _startTime  = startTimeMs;
+        _endTime    = endTimeMs;
+        _items      = items;
+    }
+
     /**
      * Set the items used in this SessionWindow.
      * @param source the source list to iterate over.

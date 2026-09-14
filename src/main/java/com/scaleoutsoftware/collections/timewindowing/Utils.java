@@ -207,4 +207,87 @@ public class Utils {
         return windowStartTimeMs;
     }
 
+    /**
+     *
+     * @param sourceCollection the source collection.
+     * @param timestampSelector the user's timestamp selector callback.
+     * @param watermarkMs the calling collections watermark in milliseconds.
+     * @param timeoutMs the timeout duration in milliseconds. This duration is used to calculate the gap between events
+     *                  in the collection -- the gap exceeding the timeout duration will cause a new session window
+     *                  to be created.
+     * @param windowClosedHandler the user's window closed handler callback.
+     * @param <T> the type of the items in the source collection
+     */
+    static <T> void performSessionWindowEviction(
+            List<T> sourceCollection,
+            TimestampSelector<T> timestampSelector,
+            long watermarkMs,
+            long timeoutMs,
+            WindowClosedHandler<T> windowClosedHandler) {
+
+        if (sourceCollection == null || sourceCollection.isEmpty()) {
+            return;
+        }
+
+        if (timeoutMs <= 0) {
+            throw new IllegalArgumentException("timeoutMs must be > 0");
+        }
+
+        int sessionStartIdx = 0;
+        int evictionIdx = 0;
+
+        for (int currentIdx = 1; currentIdx < sourceCollection.size(); currentIdx++) {
+
+            long previousTimestampMs = timestampSelector.select(sourceCollection.get(currentIdx - 1));
+
+            long currentTimestampMs = timestampSelector.select(sourceCollection.get(currentIdx));
+
+            long gapMs = currentTimestampMs - previousTimestampMs;
+
+            /*
+             * If the gap does not exceed the timeout, both elements
+             * belong to the same session.
+             */
+            if (gapMs <= timeoutMs) {
+                continue;
+            }
+
+            /*
+             * We have discovered the end of a session -- however do not finalize it until the watermark has
+             * advanced through its timeout boundary.
+             */
+            long sessionTimeoutTimeMs = previousTimestampMs + timeoutMs;
+
+            if (sessionTimeoutTimeMs > watermarkMs) {
+                break;
+            }
+
+            long sessionStartTimeMs = timestampSelector.select(sourceCollection.get(sessionStartIdx));
+
+            long sessionEndTimeMs = previousTimestampMs;
+
+            List<T> itemsInWindow = new ArrayList<T>(sourceCollection.subList(sessionStartIdx, currentIdx));
+
+            SessionTimeWindow<T> window = new SessionTimeWindow<T>(timeoutMs, sessionStartTimeMs, sessionEndTimeMs, itemsInWindow);
+
+            windowClosedHandler.onWindowClosed(window);
+            evictionIdx = currentIdx;
+
+            /*
+             * currentIdx is now the beginning of the next session.
+             */
+            sessionStartIdx = currentIdx;
+        }
+
+        /*
+         * Remove every element belonging exclusively to finalized
+         * sessions.
+         *
+         * The current/open session remains in sourceCollection.
+         */
+        if (evictionIdx > 0) {
+            sourceCollection.subList(0, evictionIdx).clear();
+        }
+    }
+
 }

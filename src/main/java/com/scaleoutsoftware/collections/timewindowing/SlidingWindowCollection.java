@@ -94,7 +94,9 @@ public class SlidingWindowCollection<T> implements Iterable<TimeWindow<T>> {
      * @return returns closed windows
      */
     public void add(T item) {
+        boolean mutated = false;
         if (_sourceCollection.isEmpty()) {
+            mutated = true; // it's possible the first item we add is immediately evicted due to watermark.
             _sourceCollection.add(0, item);
             _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
         } else {
@@ -102,10 +104,12 @@ public class SlidingWindowCollection<T> implements Iterable<TimeWindow<T>> {
             _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
             if(currentEventTimestampMs > _watermarkMs) {
                 Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
+                mutated = true;
             }
         }
-        // TODO if we didn't mutate the collection AND the watermark didn't change, we shouldn't call perform eviction
-        performEviction();
+
+        if(mutated)
+            performEviction();
     }
 
     private void performEviction() {

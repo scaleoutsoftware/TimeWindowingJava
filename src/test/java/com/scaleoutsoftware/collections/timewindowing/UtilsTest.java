@@ -193,4 +193,203 @@ public class UtilsTest {
             assertEquals(85 + i, sourceCollection.get(i).getTimestamp());
         }
     }
+
+    /*
+     * Session windowing tests:
+     */
+
+    @Test
+    public void testPerformSessionWindowEvictionNoClosedWindow() {
+        List<TestObject> sourceCollection = new ArrayList<TestObject>();
+
+        sourceCollection.add(new TestObject(0));
+        sourceCollection.add(new TestObject(1));
+        sourceCollection.add(new TestObject(2));
+        sourceCollection.add(new TestObject(3));
+
+        long watermarkMs = 20;
+        long timeoutMs = 4;
+
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+
+        Utils.performSessionWindowEviction(
+                sourceCollection,
+                TestObject::getTimestamp,
+                watermarkMs,
+                timeoutMs,
+                windowClosedHandler);
+
+        assertEquals("No session should have closed",0, closedWindows.size());
+
+        assertEquals(4, sourceCollection.size());
+
+        for (int i = 0; i < 4; i++) {
+            assertEquals(i, sourceCollection.get(i).getTimestamp());
+        }
+    }
+
+    @Test
+    public void testPerformSessionWindowEvictionOneClosedWindow() {
+        List<TestObject> sourceCollection = new ArrayList<TestObject>();
+
+        long[] sessionEventTimestamps = {
+                0, 1, 2, 3,
+                9, 10, 11
+        };
+
+        for (long timestamp : sessionEventTimestamps) {
+            sourceCollection.add(new TestObject(timestamp));
+        }
+
+        long watermarkMs = 10;
+        long timeoutMs = 4;
+
+        /*
+         * Sessions:
+         *
+         * [0, 1, 2, 3]
+         * [9, 10, 11]
+         *
+         * Gap:
+         *
+         * 9 - 3 = 6 > 4 (timeoutMs)
+         *
+         * First session timeout boundary:
+         *
+         * 3 + 4 = 7
+         *
+         * 10 (watermark) > 3, therefore the session can close.
+         */
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+
+        Utils.performSessionWindowEviction(
+                sourceCollection,
+                TestObject::getTimestamp,
+                watermarkMs,
+                timeoutMs,
+                windowClosedHandler);
+
+        assertEquals(1, closedWindows.size());
+
+        TimeWindow<TestObject> window = closedWindows.get(0);
+
+        assertEquals(0, window.getStartTimeMs());
+        assertEquals(3, window.getEndTimeMs());
+
+        assertEquals(4, window.getItems().size());
+
+        for (int i = 0; i < 4; i++) {
+            assertEquals(i, window.getItems().get(i).getTimestamp());
+        }
+
+        /*
+         * First session was finalized and evicted.
+         *
+         * Remaining open session:
+         *
+         * [9, 10, 11]
+         */
+        assertEquals(3, sourceCollection.size());
+
+        assertEquals(9, sourceCollection.get(0).getTimestamp());
+        assertEquals(10, sourceCollection.get(1).getTimestamp());
+        assertEquals(11, sourceCollection.get(2).getTimestamp());
+    }
+
+    @Test
+    public void testPerformSessionWindowEvictionMultipleClosedWindows() {
+        List<TestObject> sourceCollection = new ArrayList<TestObject>();
+
+        long[] sessionEventTimestamps = {
+                0, 1, 2, 3,
+                9, 10, 11,
+                18, 19, 20
+        };
+
+        for (long timestamp : sessionEventTimestamps) {
+            sourceCollection.add(new TestObject(timestamp));
+        }
+
+        long watermarkMs = 20;
+        long timeoutMs = 4;
+
+        /*
+         * Sessions:
+         *
+         * [0, 1, 2, 3]
+         * [9, 10, 11]
+         * [18, 19, 20]
+         *
+         * Break #1:
+         *
+         * 9 - 3 = 6 > 4 (timeoutMs)
+         *
+         * First session timeout boundary:
+         *
+         * 3 + 4 = 7 <= 20 (watermarkMs)
+         *
+         *
+         * Break #2:
+         *
+         * 18 - 11 = 7 > 4 (timeoutMs)
+         *
+         * Second session timeout boundary:
+         *
+         * 11 + 4 = 15 <= 20 (watermarkMs)
+         *
+         *
+         * No element follows 20, so the third session remains open.
+         */
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+
+        Utils.performSessionWindowEviction(
+                sourceCollection,
+                TestObject::getTimestamp,
+                watermarkMs,
+                timeoutMs,
+                windowClosedHandler);
+
+        assertEquals(2, closedWindows.size());
+
+        long[][] expectedWindows = {
+                {0, 3},
+                {9, 11}
+        };
+
+        long[][] expectedItems = {
+                {0, 1, 2, 3},
+                {9, 10, 11}
+        };
+
+        for (int i = 0; i < closedWindows.size(); i++) {
+            TimeWindow<TestObject> window = closedWindows.get(i);
+
+            assertEquals(expectedWindows[i][0], window.getStartTimeMs());
+
+            assertEquals(expectedWindows[i][1], window.getEndTimeMs());
+
+            assertEquals(expectedItems[i].length, window.getItems().size());
+
+            for (int j = 0; j < expectedItems[i].length; j++) {
+                assertEquals(expectedItems[i][j], window.getItems().get(j).getTimestamp());
+            }
+        }
+
+        /*
+         * Remaining active session:
+         *
+         * [18, 19, 20]
+         */
+        assertEquals(3, sourceCollection.size());
+
+        assertEquals(18, sourceCollection.get(0).getTimestamp());
+        assertEquals(19, sourceCollection.get(1).getTimestamp());
+        assertEquals(20, sourceCollection.get(2).getTimestamp());
+    }
 }

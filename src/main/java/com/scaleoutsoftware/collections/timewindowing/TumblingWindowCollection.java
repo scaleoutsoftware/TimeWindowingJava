@@ -32,10 +32,25 @@ public class TumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
     private WatermarkGenerator _watermarkGenerator;
     private WindowClosedHandler<T> _windowClosedHandler;
 
+    /**
+     *
+     * @param sourceCollection
+     * @param timestampSelector
+     * @param windowDurationMs
+     * @param startTimeMs
+     */
     public TumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long startTimeMs) {
         init(sourceCollection, timestampSelector, windowDurationMs, startTimeMs, new DefaultWatermarkGenerator(startTimeMs));
     }
 
+    /**
+     *
+     * @param sourceCollection
+     * @param timestampSelector
+     * @param windowDurationMs
+     * @param startTimeMs
+     * @param watermarkGenerator
+     */
     public TumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long startTimeMs, WatermarkGenerator watermarkGenerator) {
         init(sourceCollection, timestampSelector, windowDurationMs, startTimeMs, watermarkGenerator);
     }
@@ -69,6 +84,12 @@ public class TumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
             }
         }
         performEviction();
+    }
+
+    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
+        if(windowClosedHandler != null) {
+            _windowClosedHandler = windowClosedHandler;
+        }
     }
 
     private void performEviction() {
