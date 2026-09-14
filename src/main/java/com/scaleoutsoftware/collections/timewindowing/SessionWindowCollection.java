@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing;
+package com.scaleoutsoftware.collections.timewindowing;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -53,7 +53,7 @@ public class SessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
      * @param item the item to add
      */
     public void add(T item) {
-        if(_source.size() == 0)
+        if(_source.isEmpty())
             _source.add(0, item);
         else
             Utils.addTimeOrdered(_source, _selector, item);
@@ -67,7 +67,7 @@ public class SessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
 
     @Override
     public Iterator<TimeWindow<T>> iterator() {
-        if(_source == null || _source.size() == 0) {
+        if(_source == null || _source.isEmpty()) {
             return Collections.emptyIterator();
         } else {
             long end = _selector.select(_source.get(_source.size()-1)) + 1;
@@ -77,7 +77,7 @@ public class SessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
-        if(_source != null && _source.size() > 0) {
+        if(_source != null && !_source.isEmpty()) {
             long end = _selector.select(_source.get(_source.size()-1)) + 1;
             Windowing.toSessionWindows(_source, _selector, _startTime, end, _timeout).forEach(action);
         }
@@ -85,7 +85,7 @@ public class SessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
 
     @Override
     public Spliterator<TimeWindow<T>> spliterator() {
-        if(_source == null || _source.size() == 0) {
+        if(_source == null || _source.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
             long end = _selector.select(_source.get(_source.size()-1)) + 1;

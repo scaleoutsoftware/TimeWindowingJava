@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing;
+package com.scaleoutsoftware.collections.timewindowing;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -77,6 +77,12 @@ class SessionTimeWindow<T> implements TimeWindow<T> {
     }
 
     @Override
+    public List<T> getItems() {
+        if(_items == null) return Collections.emptyList();
+        return _items;
+    }
+
+    @Override
     public int size() {
         if(_items != null)
             return _items.size();
@@ -110,12 +116,12 @@ class SessionTimeWindow<T> implements TimeWindow<T> {
     }
 
     @Override
-    public long getStartTime() {
+    public long getStartTimeMs() {
         return _startTime;
     }
 
     @Override
-    public long getEndTime() {
+    public long getEndTimeMs() {
         return _endTime;
     }
 }

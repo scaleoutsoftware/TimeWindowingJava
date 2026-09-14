@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing.samples;
+package com.scaleoutsoftware.collections.timewindowing.samples;
 
 
-import com.scaleoutsoftware.streaming.timewindowing.SlidingWindowCollection;
-import com.scaleoutsoftware.streaming.timewindowing.TimeWindow;
+import com.scaleoutsoftware.collections.timewindowing.SlidingWindowCollection;
+import com.scaleoutsoftware.collections.timewindowing.TimeWindow;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -43,9 +43,8 @@ public class Sample {
 
         long time = System.currentTimeMillis();
         long end = time+(ONE_MINUTE_MILLISECOND * 10);
-        for(; time < end; time+=(ONE_MINUTE_MILLISECOND/2)) {
+        for(; time < end; time+=(ONE_MINUTE_MILLISECOND/4)) {
             person.addHeartRate(r.nextInt((max-min) + 1) + min, time);
-
         }
         long start = System.currentTimeMillis();
         long every = ONE_MINUTE_MILLISECOND;
@@ -55,10 +54,10 @@ public class Sample {
         // each window is 2 minutes long, and a new window starts every minute
         SlidingWindowCollection<HeartRate> swc = new SlidingWindowCollection<HeartRate>(
                 person.getHeartRates(),
-                heartRate -> heartRate.getTimestamp(),
+                HeartRate::getTimestamp,
                 duration,
                 every,
-                start-600000);
+                start);
 
         // create and print a sliding average
         double slidingAverage = 0;
@@ -71,7 +70,7 @@ public class Sample {
                 printWindowContentInfo(hr);
             }
 
-            slidingAverage += window.size() > 0 ? (hrSum / window.size()) : 0;
+            slidingAverage += window.size() > 0 ? ((double) hrSum / window.size()) : 0;
             windowCount++;
         }
 
@@ -79,23 +78,23 @@ public class Sample {
 
     }
 
-    public static void printWindowInfo(int count, TimeWindow<HeartRate> window) {
+    public static <V> void printWindowInfo(int count, TimeWindow<V> window) {
         builder.append(count > 0 ? "\t" : "");
         prefix = builder.toString();
-        System.out.println(String.format("%s%s%s%s%s",
+        System.out.printf("%s%s%s%s%s%n",
                 prefix,
                 "Start Time - ",
-                Timestamp.from(Instant.ofEpochMilli(window.getStartTime())).toString(),
+                Timestamp.from(Instant.ofEpochMilli(window.getStartTimeMs())).toString(),
                 " End Time - ",
-                Timestamp.from(Instant.ofEpochMilli(window.getEndTime())).toString()));
+                Timestamp.from(Instant.ofEpochMilli(window.getEndTimeMs())).toString());
     }
 
     public static void printWindowContentInfo(HeartRate hr){
-        System.out.println(String.format("%s%s%d%s%s",
+        System.out.printf("%s%s%d%s%s%n",
                 prefix,
                 "HeartRate - ",
                 hr.getHeartRate(),
                 " Timestamp - ",
-                Timestamp.from(Instant.ofEpochMilli(hr.getTimestamp())).toString()));
+                Timestamp.from(Instant.ofEpochMilli(hr.getTimestamp())).toString());
     }
 }

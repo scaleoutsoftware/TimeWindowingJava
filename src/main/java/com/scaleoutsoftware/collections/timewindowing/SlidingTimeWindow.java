@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing;
+package com.scaleoutsoftware.collections.timewindowing;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -23,13 +23,19 @@ import java.util.function.Consumer;
  */
 class SlidingTimeWindow<T> implements TimeWindow<T> {
 
-    long _startTime;
-    long _endTime;
-    List<T> _items;
+    private long _startTime;
+    private long _endTime;
+    private List<T> _items;
 
     SlidingTimeWindow(long startTime, long endTime) {
         _startTime  = startTime;
         _endTime    = endTime;
+    }
+
+    SlidingTimeWindow(long startTime, long endTime, List<T> items) {
+        _startTime  = startTime;
+        _endTime    = endTime;
+        _items      = items;
     }
 
     /**
@@ -77,12 +83,18 @@ class SlidingTimeWindow<T> implements TimeWindow<T> {
     }
 
     @Override
-    public long getStartTime() {
+    public List<T> getItems() {
+        if(_items == null) return Collections.emptyList();
+        return _items;
+    }
+
+    @Override
+    public long getStartTimeMs() {
         return _startTime;
     }
 
     @Override
-    public long getEndTime() {
+    public long getEndTimeMs() {
         return _endTime;
     }
 
@@ -111,4 +123,12 @@ class SlidingTimeWindow<T> implements TimeWindow<T> {
         }
     }
 
+    @Override
+    public String toString() {
+        return "SlidingTimeWindow{" +
+                "_startTime=" + _startTime +
+                ", _endTime=" + _endTime +
+                ", size=" + (_items == null ? 0 : _items.size()) +
+                '}';
+    }
 }

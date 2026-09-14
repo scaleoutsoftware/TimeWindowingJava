@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,23 +13,22 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing.samples;
+package com.scaleoutsoftware.collections.timewindowing;
 
-
-public class HeartRate {
-    long _timestamp;
-    int _heartRate;
-
-    public HeartRate(long timestamp, int heartRate) {
-        _timestamp = timestamp;
-        _heartRate = heartRate;
+public class TestObject {
+    private long timestamp;
+    public TestObject(long ts) {
+        timestamp = ts;
     }
 
     public long getTimestamp() {
-        return _timestamp;
+        return timestamp;
     }
 
-    public int getHeartRate() {
-        return _heartRate;
+    @Override
+    public String toString() {
+        return "TestObject{" +
+                "timestamp=" + timestamp +
+                '}';
     }
 }

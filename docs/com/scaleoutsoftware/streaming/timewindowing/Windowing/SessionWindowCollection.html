@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SlidingWindowCollection.html" title="class in com.scaleoutsoftware.streaming.timewindowing.Windowing"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SlidingWindowCollection.html" title="class in com.scaleoutsoftware.collections.timewindowing.Windowing"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../index.html?com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" target="_top">Frames</a></li>
@@ -90,7 +90,7 @@ var activeTableTab = "activeTableTab";
 <!-- ========= END OF TOP NAVBAR ========= -->
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
-<div class="subTitle">com.scaleoutsoftware.streaming.timewindowing.Windowing</div>
+<div class="subTitle">com.scaleoutsoftware.collections.timewindowing.Windowing</div>
 <h2 title="Class SessionWindowCollection" class="title">Class SessionWindowCollection&lt;T&gt;</h2>
 </div>
 <div class="contentContainer">
@@ -98,7 +98,7 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
-<li>com.scaleoutsoftware.streaming.timewindowing.Windowing.SessionWindowCollection&lt;T&gt;</li>
+<li>com.scaleoutsoftware.collections.timewindowing.Windowing.SessionWindowCollection&lt;T&gt;</li>
 </ul>
 </li>
 </ul>
@@ -107,13 +107,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;T&gt;&gt;</dd>
+<dd>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;T&gt;&gt;</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">SessionWindowCollection&lt;T&gt;</span>
 extends java.lang.Object
-implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;T&gt;&gt;</pre>
+implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;T&gt;&gt;</pre>
 <div class="block">The SessionWindowCollection transforms a List into an iterable collection of session windows. This wrapper
  class can be used to manage the retention policy of the source collection as well as to insert new objects in
  chronological order.</div>
@@ -136,7 +136,7 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html#SessionWindowCollection-java.util.List-com.scaleoutsoftware.streaming.timewindowing.Windowing.TimestampSelector-long-long-">SessionWindowCollection</a></span>(java.util.List&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;source,
-                       <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimestampSelector.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimestampSelector</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;selector,
+                       <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimestampSelector.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimestampSelector</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;selector,
                        long&nbsp;startTime,
                        long&nbsp;timeout)</code>
 <div class="block">Instantiates a new SessionWindowCollection</div>
@@ -165,14 +165,14 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html#forEach-java.util.function.Consumer-">forEach</a></span>(java.util.function.Consumer&lt;? super <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;action)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html#forEach-java.util.function.Consumer-">forEach</a></span>(java.util.function.Consumer&lt;? super <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;action)</code>&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>java.util.Iterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></td>
+<td class="colFirst"><code>java.util.Iterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html#iterator--">iterator</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>java.util.Spliterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></td>
+<td class="colFirst"><code>java.util.Spliterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html#spliterator--">spliterator</a></span>()</code>&nbsp;</td>
 </tr>
 </table>
@@ -204,7 +204,7 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 <li class="blockList">
 <h4>SessionWindowCollection</h4>
 <pre>public&nbsp;SessionWindowCollection(java.util.List&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;source,
-                               <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimestampSelector.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimestampSelector</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;selector,
+                               <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimestampSelector.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimestampSelector</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&nbsp;selector,
                                long&nbsp;startTime,
                                long&nbsp;timeout)</pre>
 <div class="block">Instantiates a new SessionWindowCollection</div>
@@ -247,10 +247,10 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 <ul class="blockList">
 <li class="blockList">
 <h4>iterator</h4>
-<pre>public&nbsp;java.util.Iterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;iterator()</pre>
+<pre>public&nbsp;java.util.Iterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;iterator()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>iterator</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
+<dd><code>iterator</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -260,10 +260,10 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 <ul class="blockList">
 <li class="blockList">
 <h4>forEach</h4>
-<pre>public&nbsp;void&nbsp;forEach(java.util.function.Consumer&lt;? super <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;action)</pre>
+<pre>public&nbsp;void&nbsp;forEach(java.util.function.Consumer&lt;? super <a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;action)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>forEach</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
+<dd><code>forEach</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -273,10 +273,10 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 <ul class="blockListLast">
 <li class="blockList">
 <h4>spliterator</h4>
-<pre>public&nbsp;java.util.Spliterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;spliterator()</pre>
+<pre>public&nbsp;java.util.Spliterator&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;&nbsp;spliterator()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>spliterator</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.streaming.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
+<dd><code>spliterator</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/TimeWindow.html" title="interface in com.scaleoutsoftware.collections.timewindowing.Windowing">TimeWindow</a>&lt;<a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" title="type parameter in SessionWindowCollection">T</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -307,7 +307,7 @@ implements java.lang.Iterable&lt;<a href="../../../../../com/scaleoutsoftware/st
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SlidingWindowCollection.html" title="class in com.scaleoutsoftware.streaming.timewindowing.Windowing"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../../com/scaleoutsoftware/streaming/timewindowing/Windowing/SlidingWindowCollection.html" title="class in com.scaleoutsoftware.collections.timewindowing.Windowing"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../../index.html?com/scaleoutsoftware/streaming/timewindowing/Windowing/SessionWindowCollection.html" target="_top">Frames</a></li>

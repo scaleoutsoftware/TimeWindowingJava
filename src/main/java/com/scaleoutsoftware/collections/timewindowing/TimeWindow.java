@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 by ScaleOut Software, Inc.
+ Copyright (c) 2026 by ScaleOut Software, Inc.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -13,7 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package com.scaleoutsoftware.streaming.timewindowing;
+package com.scaleoutsoftware.collections.timewindowing;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Supports iteration over a collection of elements that fall within the given start and end timestamps.
@@ -24,17 +27,23 @@ public interface TimeWindow<T> extends Iterable<T> {
      * Returns the start time of this window.
      * @return the start time of the window.
      */
-    long getStartTime();
+    long getStartTimeMs();
 
     /**
      * Returns the end time of this window.
      * @return the end time of this window.
      */
-    long getEndTime();
+    long getEndTimeMs();
 
     /**
      * Returns the size of the iterable collection.
      * @return the size of the iterable collection.
      */
     int size();
+
+    /**
+     * Retrieves the items of the window as a list.
+     * @return a list of the items in the window.
+     */
+    List<T> getItems();
 }
