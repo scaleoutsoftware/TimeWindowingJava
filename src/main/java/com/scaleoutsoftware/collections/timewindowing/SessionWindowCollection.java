@@ -68,6 +68,15 @@ public class SessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
         performEviction();
     }
 
+    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
+        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
+        _windowClosedHandler = windowClosedHandler;
+    }
+
+    public long getWatermark() {
+        return _watermarkMs;
+    }
+
     /**
      * Adds an item to the source collection in time ordered fashion.
      * @param item the item to add

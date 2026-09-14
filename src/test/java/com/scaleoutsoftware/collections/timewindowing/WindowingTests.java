@@ -65,6 +65,52 @@ public class WindowingTests {
         assertEquals(3, windowCount);
     }
 
+    @Test
+    public void testSessionWindowTimeoutWithWatermark() {
+        long timeout = 100;
+        long startTime = 1;
+        ArrayList<TestObject> test = new ArrayList<TestObject>();
+
+        SessionWindowCollection<TestObject> swc = new SessionWindowCollection<>(test,
+                TestObject::getTimestamp,
+                startTime,
+                timeout,
+                new LatenessToleranceWatermarkGenerator(10));
+
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+        swc.registerWindowClosedHandler(windowClosedHandler);
+
+        swc.add(new TestObject(10));
+        swc.add(new TestObject(15));
+        swc.add(new TestObject(20));
+
+        swc.add(new TestObject(125));
+        swc.add(new TestObject(130));
+        swc.add(new TestObject(135));
+
+        swc.add(new TestObject(245));
+        swc.add(new TestObject(250));
+        swc.add(new TestObject(255));
+
+        assertEquals(3, test.size());
+        assertEquals(2, closedWindows.size());
+        assertEquals(3, closedWindows.get(0).size());
+        assertEquals(3, closedWindows.get(1).size());
+        int windowCount = 0;
+        for(TimeWindow<TestObject> window : swc) {
+            windowCount++;
+            int windowItemCount = 0;
+            for(TestObject t : window) {
+                assertTrue(t.getTimestamp() >= window.getStartTimeMs() && t.getTimestamp() <= window.getEndTimeMs());
+                windowItemCount++;
+            }
+            assertEquals(3, windowItemCount);
+        }
+        assertEquals(1, windowCount);
+    }
+
 
     @Test
     public void testTumblingWindowDuration() {
@@ -105,6 +151,7 @@ public class WindowingTests {
                 duration,
                 every,
                 start);
+
         for(int i = 1; i <= numElements; i++) {
             swc.add(new TestObject(i));
         }

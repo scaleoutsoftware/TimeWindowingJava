@@ -87,9 +87,12 @@ public class TumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
     }
 
     public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
-        if(windowClosedHandler != null) {
-            _windowClosedHandler = windowClosedHandler;
-        }
+        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
+        _windowClosedHandler = windowClosedHandler;
+    }
+
+    public long getWatermark() {
+        return _watermarkMs;
     }
 
     private void performEviction() {
