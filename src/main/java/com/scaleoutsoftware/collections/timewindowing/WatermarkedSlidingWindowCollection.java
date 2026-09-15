@@ -110,18 +110,16 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Collections.emptyIterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs, _everyMs).iterator();
+            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs, _everyMs).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
         if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs, _everyMs).forEach(action);
+            Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs, _everyMs).forEach(action);
         }
     }
 
@@ -130,9 +128,8 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         if (_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size() - 1)) + 1;
-            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs, _everyMs).spliterator();
+            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs, _everyMs).spliterator();
         }
     }
 

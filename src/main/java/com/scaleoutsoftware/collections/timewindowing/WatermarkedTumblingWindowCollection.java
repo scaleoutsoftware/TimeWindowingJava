@@ -88,18 +88,16 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
         if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Collections.emptyIterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs).iterator();
+            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
         if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs).forEach(action);
+            Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs).forEach(action);
         }
     }
 
@@ -108,9 +106,8 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
         if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, start, end, _windowDurationMs).spliterator();
+            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs).spliterator();
         }
     }
 }
