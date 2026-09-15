@@ -52,8 +52,6 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
         _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
         _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
         _watermarkGenerator     = watermarkGenerator;
-
-        performEviction();
     }
 
     public void add(T item) {

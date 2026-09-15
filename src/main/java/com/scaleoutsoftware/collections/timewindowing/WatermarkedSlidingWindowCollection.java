@@ -57,8 +57,6 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         _everyMs                = everyMs;
         _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
         _watermarkGenerator     = watermarkGenerator;
-
-        performEviction();
     }
 
     public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {

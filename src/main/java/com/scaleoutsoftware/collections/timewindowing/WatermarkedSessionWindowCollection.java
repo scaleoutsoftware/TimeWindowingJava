@@ -50,8 +50,6 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
         _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
         _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
         _watermarkGenerator     = watermarkGenerator;
-
-        performEviction();
     }
 
     public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
