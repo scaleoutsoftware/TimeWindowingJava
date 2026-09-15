@@ -15,12 +15,9 @@
 */
 package com.scaleoutsoftware.collections.timewindowing;
 
-import com.scaleoutsoftware.collections.timewindowing.samples.Sample;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -31,13 +28,12 @@ public class WindowingTests {
     @Test
     public void testSessionWindowTimeout() {
         long timeout = 100;
-        long startTime = 1;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
 
-        SessionWindowCollection<TestObject> swc = new SessionWindowCollection<>(test,
+        WatermarkedSessionWindowCollection<TestObject> swc = new WatermarkedSessionWindowCollection<>(test,
                 TestObject::getTimestamp,
-                startTime,
-                timeout);
+                timeout,
+                new DefaultWatermarkGenerator(1));
 
         swc.add(new TestObject(10));
         swc.add(new TestObject(15));
@@ -68,12 +64,10 @@ public class WindowingTests {
     @Test
     public void testSessionWindowTimeoutWithWatermark() {
         long timeout = 100;
-        long startTime = 1;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
 
-        SessionWindowCollection<TestObject> swc = new SessionWindowCollection<>(test,
+        WatermarkedSessionWindowCollection<TestObject> swc = new WatermarkedSessionWindowCollection<>(test,
                 TestObject::getTimestamp,
-                startTime,
                 timeout,
                 new LatenessToleranceWatermarkGenerator(10));
 
@@ -111,33 +105,6 @@ public class WindowingTests {
         assertEquals(1, windowCount);
     }
 
-
-    @Test
-    public void testTumblingWindowDuration() {
-        int numElements = 100;
-        long start = 1;
-        long duration = 20;
-        ArrayList<TestObject> test = new ArrayList<TestObject>();
-
-        TumblingWindowCollection<TestObject> swc = new TumblingWindowCollection<>(test,
-                TestObject::getTimestamp,
-                duration,
-                start);
-        for(int i = 1; i <= numElements; i++) {
-            swc.add(new TestObject(i));
-        }
-        assertEquals(100, test.size());
-        int windowCount = 0;
-        for(TimeWindow<TestObject> window : swc) {
-            windowCount++;
-            assertTrue((window.getEndTimeMs()-window.getStartTimeMs()) <= duration);
-            for(TestObject t : window) {
-                assertTrue(t.getTimestamp() >= window.getStartTimeMs() && t.getTimestamp() < window.getEndTimeMs());
-            }
-        }
-        assertEquals(5, windowCount);
-    }
-
     @Test
     public void testSlidingWindowDuration() {
         int numElements = 100;
@@ -146,11 +113,11 @@ public class WindowingTests {
         long every = 10;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
 
-        SlidingWindowCollection<TestObject> swc = new SlidingWindowCollection<>(test,
+        WatermarkedSlidingWindowCollection<TestObject> swc = new WatermarkedSlidingWindowCollection<>(test,
                 TestObject::getTimestamp,
                 duration,
                 every,
-                start);
+                new DefaultWatermarkGenerator(start));
 
         for(int i = 1; i <= numElements; i++) {
             swc.add(new TestObject(i));
@@ -168,39 +135,81 @@ public class WindowingTests {
     }
 
     @Test
-    public void testUtilsAdd() {
-        int numElements = 100;
-        long start = 1;
-        long duration = 20;
-        ArrayList<TestObject> tumblingSource = new ArrayList<TestObject>();
+    public void testIncrementalAddWatermarking() {
+        List<TestObject> source = new ArrayList<>(100);
+        long everyMs = 5;
+        long durationMs = 10;
+        long startTimeMs = 0;
+        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        TumblingWindowCollection<TestObject> twc = new TumblingWindowCollection<>(tumblingSource,
-                TestObject::getTimestamp,
-                duration,
-                start);
-        for(int i = 0; i <= numElements; i++) {
-            twc.add(new TestObject(i));
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+        collection.registerWindowClosedHandler(windowClosedHandler);
+        for(int i = 0; i < 20; i++) {
+            collection.add(new TestObject(i));
+        }
+        assertEquals(1, closedWindows.size());
+
+        TimeWindow<TestObject> window = closedWindows.get(0);
+
+        assertEquals(0, window.getStartTimeMs());
+        assertEquals(10, window.getEndTimeMs());
+
+        assertTrue(!window.getItems().isEmpty() &&window.getItems().size() <= 11);
+
+        for (TestObject item : window) {
+            long itemTimestamp = item.getTimestamp();
+            assertTrue(itemTimestamp >= window.getStartTimeMs() && itemTimestamp <= window.getEndTimeMs());
         }
 
-        assertEquals(numElements, tumblingSource.size());
+        assertEquals(15, source.size());
+        assertEquals(5, source.get(0).getTimestamp());
+        assertEquals(19, source.get(source.size() - 1).getTimestamp());
+
     }
 
     @Test
-    public void TestUtilsAddToFront() {
-        ArrayList<TestObject> list = new ArrayList<>(25);
-        long start = 0;
-        long every = 10;
-        long duration = 20;
-        SlidingWindowCollection<TestObject> swc = new SlidingWindowCollection<TestObject>(list,
-                test -> test.getTimestamp(),
-                duration,
-                every,
-                start);
-        swc.add(new TestObject(2));
-        swc.add(new TestObject(1));
-        assertEquals(2, list.size());
-        assertEquals(list.get(0).getTimestamp(), 1);
+    public void testIncrementalAddWatermarkingLarge() {
+        List<TestObject> source = new ArrayList<>(100);
+        long everyMs = 5;
+        long durationMs = 10;
+        long startTimeMs = 0;
+        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
+        collection.registerWindowClosedHandler(windowClosedHandler);
+        for(int i = 0; i < 100; i++) {
+            collection.add(new TestObject(i));
+        }
+
+        assertEquals(17, closedWindows.size());
+
+        for (int i = 0; i < closedWindows.size(); i++) {
+            TimeWindow<TestObject> window = closedWindows.get(i);
+
+            long expectedStartTimeMs = i * everyMs;
+            long expectedEndTimeMs = expectedStartTimeMs + durationMs;
+
+            assertEquals("Unexpected window start at index " + i, expectedStartTimeMs, window.getStartTimeMs());
+
+            assertEquals("Unexpected window end at index " + i, expectedEndTimeMs, window.getEndTimeMs());
+
+            List<TestObject> items = window.getItems();
+
+            assertEquals("Unexpected item count for window at index " + i, 11, items.size());
+
+            for (TestObject item : window) {
+                long timestamp = item.getTimestamp();
+                assertTrue("Unexpected timestamp in window " + i, timestamp >= expectedStartTimeMs && timestamp <= expectedEndTimeMs);
+            }
+        }
     }
+
+
+    /*
+     * Non-watermarking tests
+     */
 
     @Test
     public void testEviction() {
@@ -238,74 +247,63 @@ public class WindowingTests {
     }
 
     @Test
-    public void testIncrementalAddWatermarking() {
-        List<TestObject> source = new ArrayList<>(100);
-        long everyMs = 5;
-        long durationMs = 10;
-        long startTimeMs = 0;
-        SlidingWindowCollection<TestObject> collection = new SlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, startTimeMs, new LatenessToleranceWatermarkGenerator(5));
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+    public void testTumblingWindowDuration() {
+        int numElements = 100;
+        long start = 1;
+        long duration = 20;
+        ArrayList<TestObject> test = new ArrayList<TestObject>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-        collection.registerWindowClosedHandler(windowClosedHandler);
-        for(int i = 0; i < 20; i++) {
-            collection.add(new TestObject(i));
+        TumblingWindowCollection<TestObject> swc = new TumblingWindowCollection<>(test,
+                TestObject::getTimestamp,
+                duration,
+                start);
+        for(int i = 1; i <= numElements; i++) {
+            swc.add(new TestObject(i));
         }
-        assertEquals(1, closedWindows.size());
-
-        TimeWindow<TestObject> window = closedWindows.get(0);
-
-        assertEquals(0, window.getStartTimeMs());
-        assertEquals(10, window.getEndTimeMs());
-
-        assertTrue(!window.getItems().isEmpty() &&window.getItems().size() <= 11);
-
-        for (TestObject item : window) {
-            long itemTimestamp = item.getTimestamp();
-            assertTrue(itemTimestamp >= window.getStartTimeMs() && itemTimestamp <= window.getEndTimeMs());
+        assertEquals(100, test.size());
+        int windowCount = 0;
+        for(TimeWindow<TestObject> window : swc) {
+            windowCount++;
+            assertTrue((window.getEndTimeMs()-window.getStartTimeMs()) <= duration);
+            for(TestObject t : window) {
+                assertTrue(t.getTimestamp() >= window.getStartTimeMs() && t.getTimestamp() < window.getEndTimeMs());
+            }
         }
-
-        assertEquals(15, source.size());
-        assertEquals(5, source.get(0).getTimestamp());
-        assertEquals(19, source.get(source.size() - 1).getTimestamp());
-
+        assertEquals(5, windowCount);
     }
 
     @Test
-    public void testIncrementalAddWatermarkingLarge() {
-        List<TestObject> source = new ArrayList<>(100);
-        long everyMs = 5;
-        long durationMs = 10;
-        long startTimeMs = 0;
-        SlidingWindowCollection<TestObject> collection = new SlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, startTimeMs, new LatenessToleranceWatermarkGenerator(5));
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+    public void testUtilsAdd() {
+        int numElements = 100;
+        long start = 1;
+        long duration = 20;
+        ArrayList<TestObject> tumblingSource = new ArrayList<TestObject>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-        collection.registerWindowClosedHandler(windowClosedHandler);
-        for(int i = 0; i < 100; i++) {
-            collection.add(new TestObject(i));
+        TumblingWindowCollection<TestObject> twc = new TumblingWindowCollection<>(tumblingSource,
+                TestObject::getTimestamp,
+                duration,
+                start);
+        for(int i = 0; i <= numElements; i++) {
+            twc.add(new TestObject(i));
         }
 
-        assertEquals(17, closedWindows.size());
+        assertEquals(numElements, tumblingSource.size());
+    }
 
-        for (int i = 0; i < closedWindows.size(); i++) {
-            TimeWindow<TestObject> window = closedWindows.get(i);
-
-            long expectedStartTimeMs = i * everyMs;
-            long expectedEndTimeMs = expectedStartTimeMs + durationMs;
-
-            assertEquals("Unexpected window start at index " + i, expectedStartTimeMs, window.getStartTimeMs());
-
-            assertEquals("Unexpected window end at index " + i, expectedEndTimeMs, window.getEndTimeMs());
-
-            List<TestObject> items = window.getItems();
-
-            assertEquals("Unexpected item count for window at index " + i, 11, items.size());
-
-            for (TestObject item : window) {
-                long timestamp = item.getTimestamp();
-                assertTrue("Unexpected timestamp in window " + i, timestamp >= expectedStartTimeMs && timestamp <= expectedEndTimeMs);
-            }
-        }
+    @Test
+    public void TestUtilsAddToFront() {
+        ArrayList<TestObject> list = new ArrayList<>(25);
+        long start = 0;
+        long every = 10;
+        long duration = 20;
+        SlidingWindowCollection<TestObject> swc = new SlidingWindowCollection<TestObject>(list,
+                TestObject::getTimestamp,
+                duration,
+                every,
+                start);
+        swc.add(new TestObject(2));
+        swc.add(new TestObject(1));
+        assertEquals(2, list.size());
+        assertEquals(list.get(0).getTimestamp(), 1);
     }
 }

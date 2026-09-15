@@ -23,107 +23,62 @@ import java.util.function.Consumer;
  * source collection.
  */
 public class TumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    private List<T> _sourceCollection;
-    private TimestampSelector<T> _timestampSelector;
-    private long _startTimeMs;
-    private long _windowDurationMs;
-    private long _watermarkMs;
-    private long _nextWindowStartTimeMs;
-    private WatermarkGenerator _watermarkGenerator;
-    private WindowClosedHandler<T> _windowClosedHandler;
+    List<T> _source;
+    private TimestampSelector<T> _selector;
+    long _startTime;
+    long _windowDuration;
 
-    /**
-     *
-     * @param sourceCollection
-     * @param timestampSelector
-     * @param windowDurationMs
-     * @param startTimeMs
-     */
-    public TumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long startTimeMs) {
-        init(sourceCollection, timestampSelector, windowDurationMs, startTimeMs, new DefaultWatermarkGenerator(startTimeMs));
+    public TumblingWindowCollection(List<T> source, TimestampSelector<T> selector, long windowDuration, long startTime) {
+        init(source, selector, windowDuration, startTime);
     }
 
-    /**
-     *
-     * @param sourceCollection
-     * @param timestampSelector
-     * @param windowDurationMs
-     * @param startTimeMs
-     * @param watermarkGenerator
-     */
-    public TumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long startTimeMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, windowDurationMs, startTimeMs, watermarkGenerator);
-    }
-
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long startTimeMs, WatermarkGenerator watermarkGenerator) {
-        if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null.");
-        if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null.");
-        if(windowDurationMs <= 0) throw new IllegalArgumentException("window duration is <= 0");
-        if(startTimeMs < 0) throw new IllegalArgumentException("startTimeMs <= 0");
-        if(watermarkGenerator == null) throw new IllegalArgumentException("watermark generator is null");
-        _sourceCollection       = sourceCollection;
-        _timestampSelector      = timestampSelector;
-        _windowDurationMs       = windowDurationMs;
-        _startTimeMs            = startTimeMs;
-        _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
-        _watermarkMs            = startTimeMs;
-        _watermarkGenerator     = watermarkGenerator;
+    private void init(List<T> source, TimestampSelector<T> selector, long windowDuration,  long startTime) {
+        _source         = source;
+        _selector       = selector;
+        _windowDuration = windowDuration;
+        _startTime      = startTime;
 
         performEviction();
     }
 
     public void add(T item) {
-        if (_sourceCollection.isEmpty()) {
-            _sourceCollection.add(0, item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
-        } else {
-            long currentEventTimestampMs = _timestampSelector.select(item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
-            if(currentEventTimestampMs > _watermarkMs) {
-                Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
-            }
-        }
+        if(_source.size() == 0)
+            _source.add(0, item);
+        else
+            Utils.addTimeOrdered(_source, _selector, item);
+
         performEviction();
     }
 
-    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
-        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
-        _windowClosedHandler = windowClosedHandler;
-    }
-
-    public long getWatermark() {
-        return _watermarkMs;
-    }
-
     private void performEviction() {
-        _nextWindowStartTimeMs = Utils.performWatermarkedWindowedEviction(_sourceCollection, _timestampSelector, _watermarkMs, _windowDurationMs, _windowDurationMs, _nextWindowStartTimeMs, _windowClosedHandler);
+        Utils.performEviction(_source, _selector, _startTime);
     }
 
     @Override
     public Iterator<TimeWindow<T>> iterator() {
-        if(_sourceCollection == null || _sourceCollection.isEmpty()) {
+        if(_source == null || _source.size() == 0) {
             return Collections.emptyIterator();
         } else {
-            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).iterator();
+            long end = _selector.select(_source.get(_source.size()-1)) + 1;
+            return Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
-        if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
-            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).forEach(action);
+        if(_source != null && _source.size() != 0) {
+            long end = _selector.select(_source.get(_source.size()-1)) + 1;
+            Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).forEach(action);
         }
     }
 
     @Override
     public Spliterator<TimeWindow<T>> spliterator() {
-        if(_sourceCollection == null || _sourceCollection.isEmpty()) {
+        if(_source == null || _source.size() == 0) {
             return Spliterators.emptySpliterator();
         } else {
-            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).spliterator();
+            long end = _selector.select(_source.get(_source.size()-1)) + 1;
+            return Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).spliterator();
         }
     }
 }

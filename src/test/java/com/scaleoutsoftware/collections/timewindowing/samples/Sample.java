@@ -15,7 +15,6 @@
 */
 package com.scaleoutsoftware.collections.timewindowing.samples;
 
-
 import com.scaleoutsoftware.collections.timewindowing.SlidingWindowCollection;
 import com.scaleoutsoftware.collections.timewindowing.TimeWindow;
 
