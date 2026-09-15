@@ -15,6 +15,7 @@
 */
 package com.scaleoutsoftware.collections.timewindowing;
 
+import com.scaleoutsoftware.collections.timewindowing.samples.Sample;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -108,7 +109,7 @@ public class WindowingTests {
     @Test
     public void testSlidingWindowDuration() {
         int numElements = 100;
-        long start = 1;
+        long start = 0;
         long duration = 20;
         long every = 10;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
@@ -119,13 +120,17 @@ public class WindowingTests {
                 every,
                 new DefaultWatermarkGenerator(start));
 
-        for(int i = 1; i <= numElements; i++) {
+        for(int i = 0; i < numElements; i++) {
             swc.add(new TestObject(i));
         }
         assertEquals(100, test.size());
         int windowCount = 0;
         for(TimeWindow<TestObject> window : swc) {
-            assertTrue((window.getEndTimeMs()-window.getStartTimeMs()) <= duration);
+            for(int i = 0; i < windowCount; i++) {
+                System.out.print("\t");
+            }
+            System.out.println("Start Time - " + window.getStartTimeMs() + " End Time: " + window.getEndTimeMs());
+            assertEquals(duration, (window.getEndTimeMs()-window.getStartTimeMs()));
             for(TestObject t : window) {
                 assertTrue(t.getTimestamp() >= window.getStartTimeMs() && t.getTimestamp() < window.getEndTimeMs());
             }

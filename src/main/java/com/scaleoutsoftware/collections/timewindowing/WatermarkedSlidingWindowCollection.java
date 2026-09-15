@@ -57,6 +57,8 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         _everyMs                = everyMs;
         _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
         _watermarkGenerator     = watermarkGenerator;
+
+        performEviction();
     }
 
     public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
@@ -126,7 +128,7 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         if (_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size() - 1)) + 1;
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
             return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _windowDurationMs, _everyMs).spliterator();
         }
     }

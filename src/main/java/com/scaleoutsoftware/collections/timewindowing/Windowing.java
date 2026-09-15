@@ -138,11 +138,7 @@ public class Windowing {
 
                 @Override
                 public SlidingTimeWindow<T> next() {
-                    long dur = _windowDurationMs;
-                    if((_startTimeMs + dur) > _endTimeMs) {
-                        dur = _endTimeMs - _startTimeMs;
-                    }
-                    SlidingTimeWindow<T> window = new SlidingTimeWindow<T>(_startTimeMs, _startTimeMs + dur);
+                    SlidingTimeWindow<T> window = new SlidingTimeWindow<T>(_startTimeMs, _startTimeMs + _windowDurationMs);
                     index = window.setItems(_sourceCollection, index, _timestampSelector);
                     _startTimeMs = _startTimeMs + _everyDurationMs;
                     return window;
