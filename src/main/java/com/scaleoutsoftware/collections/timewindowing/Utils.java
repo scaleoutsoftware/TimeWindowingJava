@@ -81,7 +81,6 @@ public class Utils {
     /**
      * Removes items from the parameter source collection that have timestamps before the watermark.
      *
-     * Fires window closed events to the parameter {@link WindowClosedHandler} if a window is closed.
      *
      * Windows have inclusive starts and inclusive ends.
      *

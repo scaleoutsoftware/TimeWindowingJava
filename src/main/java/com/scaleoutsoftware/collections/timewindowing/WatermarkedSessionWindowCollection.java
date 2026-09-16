@@ -38,15 +38,15 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
      * @param timeoutMs the minimum amount of time between session window ranges
      * @param watermarkGenerator used to generate a watermark. Entries that arrive before the watermark time are evicted.
      */
-    public WatermarkedSessionWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long timeoutMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, timeoutMs, watermarkGenerator);
+    public WatermarkedSessionWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long timeoutMs, WatermarkGenerator watermarkGenerator) {
+        init(sourceCollection, timestampSelector, startTimeMs, timeoutMs, watermarkGenerator);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long timeoutMs, WatermarkGenerator watermarkGenerator) {
+    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long timeoutMs, WatermarkGenerator watermarkGenerator) {
         _sourceCollection       = sourceCollection;
         _timestampSelector      = timestampSelector;
         _timeoutMs              = timeoutMs;
-        _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
+        _nextWindowStartTimeMs  = startTimeMs;
         _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
         _watermarkGenerator     = watermarkGenerator;
     }

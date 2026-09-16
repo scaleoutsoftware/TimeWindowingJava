@@ -40,11 +40,11 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
      * @param everyMs the time between the starting point of each time window
      * @param watermarkGenerator used to generate a watermark. Entries that arrive before the watermark time are evicted.
      */
-    public WatermarkedSlidingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, windowDurationMs, everyMs, watermarkGenerator);
+    public WatermarkedSlidingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
+        init(sourceCollection, timestampSelector, startTimeMs, windowDurationMs, everyMs, watermarkGenerator);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
+    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
         if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null in param.");
         if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null in param.");
         if(windowDurationMs <=0) throw new IllegalArgumentException("window duration is <= 0 in param");
@@ -54,7 +54,7 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         _timestampSelector      = timestampSelector;
         _windowDurationMs       = windowDurationMs;
         _everyMs                = everyMs;
-        _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
+        _nextWindowStartTimeMs  = startTimeMs;
         _watermarkGenerator     = watermarkGenerator;
     }
 

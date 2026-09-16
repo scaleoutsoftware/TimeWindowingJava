@@ -29,12 +29,14 @@ public class WindowingTests {
     @Test
     public void testSessionWindowTimeout() {
         long timeout = 100;
+        long startTimeMs = 1;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
 
         WatermarkedSessionWindowCollection<TestObject> swc = new WatermarkedSessionWindowCollection<>(test,
                 TestObject::getTimestamp,
+                startTimeMs,
                 timeout,
-                new DefaultWatermarkGenerator(1));
+                new DefaultWatermarkGenerator(startTimeMs));
 
         swc.add(new TestObject(10));
         swc.add(new TestObject(15));
@@ -65,10 +67,12 @@ public class WindowingTests {
     @Test
     public void testSessionWindowTimeoutWithWatermark() {
         long timeout = 100;
+        long startTimeMs = 1;
         ArrayList<TestObject> test = new ArrayList<TestObject>();
 
         WatermarkedSessionWindowCollection<TestObject> swc = new WatermarkedSessionWindowCollection<>(test,
                 TestObject::getTimestamp,
+                startTimeMs,
                 timeout,
                 new LatenessToleranceWatermarkGenerator(10));
 
@@ -113,6 +117,7 @@ public class WindowingTests {
 
         WatermarkedSlidingWindowCollection<TestObject> swc = new WatermarkedSlidingWindowCollection<>(test,
                 TestObject::getTimestamp,
+                start,
                 duration,
                 every,
                 new DefaultWatermarkGenerator(start));
@@ -138,7 +143,7 @@ public class WindowingTests {
         long everyMs = 5;
         long durationMs = 10;
         long startTimeMs = 0;
-        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
+        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, startTimeMs, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
 
@@ -171,7 +176,7 @@ public class WindowingTests {
         long everyMs = 5;
         long durationMs = 10;
         long startTimeMs = 0;
-        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
+        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, startTimeMs, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
         for(int i = 0; i < 100; i++) {
@@ -198,6 +203,35 @@ public class WindowingTests {
                 long timestamp = item.getTimestamp();
                 assertTrue("Unexpected timestamp in window " + i, timestamp >= expectedStartTimeMs && timestamp <= expectedEndTimeMs);
             }
+        }
+    }
+
+    @Test
+    public void testWindowClosedEmpty() {
+        List<TestObject> source = new ArrayList<>(100);
+        long everyMs = 10;
+        long durationMs = 10;
+        long startTimeMs = 0;
+        WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, startTimeMs, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
+        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
+
+        for(int i = 11; i < 21; i++) {
+            closedWindows.addAll(collection.add(new TestObject(i)));
+        }
+
+        assertEquals(1, closedWindows.size()); // close one window, should be empty
+
+        for (int i = 0; i < closedWindows.size(); i++) {
+            TimeWindow<TestObject> window = closedWindows.get(i);
+
+            long expectedStartTimeMs = i * everyMs;
+            long expectedEndTimeMs = expectedStartTimeMs + durationMs;
+
+            assertEquals("Unexpected window start at index " + i, expectedStartTimeMs, window.getStartTimeMs());
+
+            assertEquals("Unexpected window end at index " + i, expectedEndTimeMs, window.getEndTimeMs());
+
+            assertEquals(0, window.size());
         }
     }
 

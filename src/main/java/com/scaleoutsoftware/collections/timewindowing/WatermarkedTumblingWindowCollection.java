@@ -36,11 +36,11 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
      * @param windowDurationMs
      * @param watermarkGenerator
      */
-    public WatermarkedTumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, windowDurationMs, watermarkGenerator);
+    public WatermarkedTumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
+        init(sourceCollection, timestampSelector, startTimeMs, windowDurationMs, watermarkGenerator);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
+    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
         if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null.");
         if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null.");
         if(windowDurationMs <= 0) throw new IllegalArgumentException("window duration is <= 0");
@@ -48,7 +48,7 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
         _sourceCollection       = sourceCollection;
         _timestampSelector      = timestampSelector;
         _windowDurationMs       = windowDurationMs;
-        _nextWindowStartTimeMs  = sourceCollection.isEmpty() ? 0 : timestampSelector.select(sourceCollection.get(0));
+        _nextWindowStartTimeMs  = startTimeMs;
         _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
         _watermarkGenerator     = watermarkGenerator;
     }
