@@ -31,7 +31,6 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
     private long _watermarkMs;
     private long _nextWindowStartTimeMs;
     private WatermarkGenerator _watermarkGenerator;
-    private WindowClosedHandler<T> _windowClosedHandler;
 
     /**
      * Instantiates a new SlidingWindowCollection
@@ -59,21 +58,12 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         _watermarkGenerator     = watermarkGenerator;
     }
 
-    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
-        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
-        _windowClosedHandler = windowClosedHandler;
-    }
-
-    public long getWatermark() {
-        return _watermarkMs;
-    }
-
     /**
      * Adds an item to the underlying source collection in chronological order.
      * @param item the item to add
      * @return returns closed windows
      */
-    public void add(T item) {
+    public List<TimeWindow<T>> add(T item) {
         boolean mutated = false;
         if (_sourceCollection.isEmpty()) {
             mutated = true; // it's possible the first item we add is immediately evicted due to watermark.
@@ -89,18 +79,21 @@ public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindo
         }
 
         if(mutated)
-            performEviction();
+            return performEviction();
+        else
+            return Collections.emptyList();
     }
 
-    private void performEviction() {
-        _nextWindowStartTimeMs = Utils.performWatermarkedWindowedEviction(
+    private List<TimeWindow<T>> performEviction() {
+        EvictionMetadata<T> ret = Utils.performWatermarkedWindowedEviction(
                 _sourceCollection,
                 _timestampSelector,
                 _watermarkMs,
                 _windowDurationMs,
                 _everyMs,
-                _nextWindowStartTimeMs,
-                _windowClosedHandler);
+                _nextWindowStartTimeMs);
+        _nextWindowStartTimeMs = ret.getNextWindowStartTimeMs();
+        return ret.getClosedWindows();
     }
 
     @Override

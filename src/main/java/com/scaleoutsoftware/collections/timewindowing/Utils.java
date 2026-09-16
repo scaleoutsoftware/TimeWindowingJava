@@ -16,6 +16,7 @@
 package com.scaleoutsoftware.collections.timewindowing;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -90,22 +91,20 @@ public class Utils {
      * @param windowSizeMs the window size in milliseconds.
      * @param everyMs how frequently a window occurs in milliseconds.
      * @param nextWindowStartTimeMs the next windows start time in milliseconds. First time callers should pass the source collections start time.
-     * @param windowClosedHandler the user's window closed handler callback.
      * @return the nextWindowStartTimeMs. This should be saved and reused when calling
-     * {@link Utils#performWatermarkedWindowedEviction(List, TimestampSelector, long, long, long, long, WindowClosedHandler)}
+     * {@link Utils#performWatermarkedWindowedEviction(List, TimestampSelector, long, long, long, long)}
      * @param <T> the type of the items in the source collection
      */
-    static <T> long performWatermarkedWindowedEviction(
+    static <T> EvictionMetadata<T> performWatermarkedWindowedEviction(
             List<T> sourceCollection,
             TimestampSelector<T> timestampSelector,
             long watermarkMs,
             long windowSizeMs,
             long everyMs,
-            long nextWindowStartTimeMs,
-            WindowClosedHandler<T> windowClosedHandler) {
+            long nextWindowStartTimeMs) {
 
         if (sourceCollection == null || sourceCollection.isEmpty()) {
-            return nextWindowStartTimeMs;
+            return new EvictionMetadata<>(null, nextWindowStartTimeMs);
         }
 
         if (windowSizeMs <= 0) {
@@ -125,6 +124,7 @@ public class Utils {
          * Windows are inclusive on both ends.
          */
         long windowEndTimeMs = windowStartTimeMs + windowSizeMs;
+        List<TimeWindow<T>> closedWindows = new LinkedList<>();
 
         /*
          * Close every window whose inclusive end timestamp has
@@ -167,10 +167,7 @@ public class Utils {
 
             SlidingTimeWindow<T> window = new SlidingTimeWindow<T>(windowStartTimeMs, windowEndTimeMs, itemsInWindow);
 
-            // TODO
-            if(windowClosedHandler != null) {
-                windowClosedHandler.onWindowClosed(window);
-            }
+            closedWindows.add(window);
 
             /*
              * Advance to the next sliding window.
@@ -204,7 +201,7 @@ public class Utils {
         /*
          * Return the start of the next window that has not yet closed.
          */
-        return windowStartTimeMs;
+        return new EvictionMetadata<T>(closedWindows, windowStartTimeMs);
     }
 
     /**
@@ -215,18 +212,16 @@ public class Utils {
      * @param timeoutMs the timeout duration in milliseconds. This duration is used to calculate the gap between events
      *                  in the collection -- the gap exceeding the timeout duration will cause a new session window
      *                  to be created.
-     * @param windowClosedHandler the user's window closed handler callback.
      * @param <T> the type of the items in the source collection
      */
-    static <T> void performSessionWindowEviction(
+    static <T> EvictionMetadata<T> performSessionWindowEviction(
             List<T> sourceCollection,
             TimestampSelector<T> timestampSelector,
             long watermarkMs,
-            long timeoutMs,
-            WindowClosedHandler<T> windowClosedHandler) {
+            long timeoutMs) {
 
         if (sourceCollection == null || sourceCollection.isEmpty()) {
-            return;
+            return new EvictionMetadata<>(null);
         }
 
         if (timeoutMs <= 0) {
@@ -235,6 +230,7 @@ public class Utils {
 
         int sessionStartIdx = 0;
         int evictionIdx = 0;
+        List<TimeWindow<T>> closedWindows = new LinkedList<>();
 
         for (int currentIdx = 1; currentIdx < sourceCollection.size(); currentIdx++) {
 
@@ -270,10 +266,8 @@ public class Utils {
 
             SessionTimeWindow<T> window = new SessionTimeWindow<T>(timeoutMs, sessionStartTimeMs, sessionEndTimeMs, itemsInWindow);
 
-            // TODO
-            if(windowClosedHandler != null) {
-                windowClosedHandler.onWindowClosed(window);
-            }
+            closedWindows.add(window);
+
             evictionIdx = currentIdx;
 
             /*
@@ -291,6 +285,7 @@ public class Utils {
         if (evictionIdx > 0) {
             sourceCollection.subList(0, evictionIdx).clear();
         }
+        return new EvictionMetadata<>(closedWindows);
     }
 
 }

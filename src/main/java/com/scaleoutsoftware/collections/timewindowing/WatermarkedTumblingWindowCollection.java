@@ -29,7 +29,6 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
     private long _watermarkMs;
     private long _nextWindowStartTimeMs;
     private WatermarkGenerator _watermarkGenerator;
-    private WindowClosedHandler<T> _windowClosedHandler;
     /**
      *
      * @param sourceCollection
@@ -54,31 +53,36 @@ public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWind
         _watermarkGenerator     = watermarkGenerator;
     }
 
-    public void add(T item) {
+    public List<TimeWindow<T>> add(T item) {
+        boolean mutated = false;
         if (_sourceCollection.isEmpty()) {
             _sourceCollection.add(0, item);
             _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
+            mutated = true;
         } else {
             long currentEventTimestampMs = _timestampSelector.select(item);
             _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
             if(currentEventTimestampMs > _watermarkMs) {
                 Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
+                mutated = true;
             }
         }
-        performEviction();
+        if(mutated)
+            return performEviction();
+        else
+            return Collections.emptyList();
     }
 
-    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
-        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
-        _windowClosedHandler = windowClosedHandler;
-    }
-
-    public long getWatermark() {
-        return _watermarkMs;
-    }
-
-    private void performEviction() {
-        _nextWindowStartTimeMs = Utils.performWatermarkedWindowedEviction(_sourceCollection, _timestampSelector, _watermarkMs, _windowDurationMs, _windowDurationMs, _nextWindowStartTimeMs, _windowClosedHandler);
+    private List<TimeWindow<T>> performEviction() {
+        EvictionMetadata<T> ret = Utils.performWatermarkedWindowedEviction(
+                _sourceCollection,
+                _timestampSelector,
+                _watermarkMs,
+                _windowDurationMs,
+                _windowDurationMs,
+                _nextWindowStartTimeMs);
+        _nextWindowStartTimeMs = ret.getNextWindowStartTimeMs();
+        return ret.getClosedWindows();
     }
 
     @Override

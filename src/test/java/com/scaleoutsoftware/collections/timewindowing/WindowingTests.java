@@ -74,20 +74,17 @@ public class WindowingTests {
 
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-        swc.registerWindowClosedHandler(windowClosedHandler);
+        closedWindows.addAll(swc.add(new TestObject(10)));
+        closedWindows.addAll(swc.add(new TestObject(15)));
+        closedWindows.addAll(swc.add(new TestObject(20)));
 
-        swc.add(new TestObject(10));
-        swc.add(new TestObject(15));
-        swc.add(new TestObject(20));
+        closedWindows.addAll(swc.add(new TestObject(125)));
+        closedWindows.addAll(swc.add(new TestObject(130)));
+        closedWindows.addAll(swc.add(new TestObject(135)));
 
-        swc.add(new TestObject(125));
-        swc.add(new TestObject(130));
-        swc.add(new TestObject(135));
-
-        swc.add(new TestObject(245));
-        swc.add(new TestObject(250));
-        swc.add(new TestObject(255));
+        closedWindows.addAll(swc.add(new TestObject(245)));
+        closedWindows.addAll(swc.add(new TestObject(250)));
+        closedWindows.addAll(swc.add(new TestObject(255)));
 
         assertEquals(3, test.size());
         assertEquals(2, closedWindows.size());
@@ -126,10 +123,6 @@ public class WindowingTests {
         assertEquals(100, test.size());
         int windowCount = 0;
         for(TimeWindow<TestObject> window : swc) {
-            for(int i = 0; i < windowCount; i++) {
-                System.out.print("\t");
-            }
-            System.out.println("Start Time - " + window.getStartTimeMs() + " End Time: " + window.getEndTimeMs());
             assertEquals(duration, (window.getEndTimeMs()-window.getStartTimeMs()));
             for(TestObject t : window) {
                 assertTrue(t.getTimestamp() >= window.getStartTimeMs() && t.getTimestamp() < window.getEndTimeMs());
@@ -148,10 +141,9 @@ public class WindowingTests {
         WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-        collection.registerWindowClosedHandler(windowClosedHandler);
+
         for(int i = 0; i < 20; i++) {
-            collection.add(new TestObject(i));
+            closedWindows.addAll(collection.add(new TestObject(i)));
         }
         assertEquals(1, closedWindows.size());
 
@@ -182,10 +174,8 @@ public class WindowingTests {
         WatermarkedSlidingWindowCollection<TestObject> collection = new WatermarkedSlidingWindowCollection<TestObject>(source, TestObject::getTimestamp, durationMs, everyMs, new LatenessToleranceWatermarkGenerator(5));
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-        collection.registerWindowClosedHandler(windowClosedHandler);
         for(int i = 0; i < 100; i++) {
-            collection.add(new TestObject(i));
+            closedWindows.addAll(collection.add(new TestObject(i)));
         }
 
         assertEquals(17, closedWindows.size());

@@ -40,18 +40,15 @@ public class UtilsTest {
         long windowSizeMs = endTimeMs - startTimeMs;
         long everyMs = 100;
 
-        // add closed windows to a collection to verify events fire
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performWatermarkedWindowedEviction(
+        EvictionMetadata<TestObject> ret = Utils.performWatermarkedWindowedEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
                 windowSizeMs,
                 everyMs,
-                startTimeMs,
-                windowClosedHandler);
+                startTimeMs);
+
+        List<TimeWindow<TestObject>> closedWindows = ret.getClosedWindows();
 
         assertEquals("Expected exactly one window to close", 1, closedWindows.size());
 
@@ -83,18 +80,15 @@ public class UtilsTest {
         long windowSizeMs = 50;
         long everyMs = 50;
 
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
-
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performWatermarkedWindowedEviction(
+        EvictionMetadata<TestObject> ret = Utils.performWatermarkedWindowedEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
                 windowSizeMs,
                 everyMs,
-                startTimeMs,
-                windowClosedHandler);
+                startTimeMs);
+
+        List<TimeWindow<TestObject>> closedWindows = ret.getClosedWindows();
 
         assertEquals("Expected exactly one window to close", 1, closedWindows.size());
 
@@ -125,18 +119,16 @@ public class UtilsTest {
         long watermarkMs = 90;
         long windowSizeMs = 10;
         long everyMs = 5;
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performWatermarkedWindowedEviction(
+        EvictionMetadata<TestObject> ret = Utils.performWatermarkedWindowedEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
                 windowSizeMs,
                 everyMs,
-                startTimeMs,
-                windowClosedHandler);
+                startTimeMs);
+
+        List<TimeWindow<TestObject>> closedWindows = ret.getClosedWindows();
 
         // Closed windows:
         //
@@ -212,14 +204,11 @@ public class UtilsTest {
 
         List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
 
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performSessionWindowEviction(
+        EvictionMetadata<TestObject> ret = Utils.performSessionWindowEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
-                timeoutMs,
-                windowClosedHandler);
+                timeoutMs);
 
         assertEquals("No session should have closed",0, closedWindows.size());
 
@@ -262,16 +251,13 @@ public class UtilsTest {
          *
          * 10 (watermark) > 3, therefore the session can close.
          */
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
-
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performSessionWindowEviction(
+        EvictionMetadata<TestObject> ret = Utils.performSessionWindowEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
-                timeoutMs,
-                windowClosedHandler);
+                timeoutMs);
+
+        List<TimeWindow<TestObject>> closedWindows = ret.getClosedWindows();
 
         assertEquals(1, closedWindows.size());
 
@@ -344,16 +330,13 @@ public class UtilsTest {
          *
          * No element follows 20, so the third session remains open.
          */
-        List<TimeWindow<TestObject>> closedWindows = new ArrayList<TimeWindow<TestObject>>();
-
-        WindowClosedHandler<TestObject> windowClosedHandler = closedWindows::add;
-
-        Utils.performSessionWindowEviction(
+        EvictionMetadata<TestObject> ret = Utils.performSessionWindowEviction(
                 sourceCollection,
                 TestObject::getTimestamp,
                 watermarkMs,
-                timeoutMs,
-                windowClosedHandler);
+                timeoutMs);
+
+        List<TimeWindow<TestObject>> closedWindows = ret.getClosedWindows();
 
         assertEquals(2, closedWindows.size());
 

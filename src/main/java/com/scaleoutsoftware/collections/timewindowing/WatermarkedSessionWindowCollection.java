@@ -30,7 +30,6 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
     private long _watermarkMs;
     private long _nextWindowStartTimeMs;
     private WatermarkGenerator _watermarkGenerator;
-    private WindowClosedHandler<T> _windowClosedHandler;
 
     /**
      * Instantiates a new SessionWindowCollection
@@ -52,20 +51,11 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
         _watermarkGenerator     = watermarkGenerator;
     }
 
-    public void registerWindowClosedHandler(WindowClosedHandler<T> windowClosedHandler) {
-        if(windowClosedHandler == null) throw new IllegalArgumentException("Unexpected null window closed handler in param.");
-        _windowClosedHandler = windowClosedHandler;
-    }
-
-    public long getWatermark() {
-        return _watermarkMs;
-    }
-
     /**
      * Adds an item to the source collection in time ordered fashion.
      * @param item the item to add
      */
-    public void add(T item) {
+    public List<TimeWindow<T>> add(T item) {
         boolean mutated = false;
         if (_sourceCollection.isEmpty()) {
             mutated = true; // it's possible the first item we add is immediately evicted due to watermark.
@@ -81,11 +71,14 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
         }
 
         if(mutated)
-            performEviction();
+            return performEviction();
+        else
+            return Collections.emptyList();
     }
 
-    private void performEviction() {
-        Utils.performSessionWindowEviction(_sourceCollection, _timestampSelector, _watermarkMs, _timeoutMs, _windowClosedHandler);
+    private List<TimeWindow<T>> performEviction() {
+        EvictionMetadata<T> ret = Utils.performSessionWindowEviction(_sourceCollection, _timestampSelector, _watermarkMs, _timeoutMs);
+        return ret.getClosedWindows();
     }
 
     @Override
