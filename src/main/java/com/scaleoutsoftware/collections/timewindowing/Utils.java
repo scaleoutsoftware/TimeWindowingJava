@@ -25,6 +25,11 @@ import java.util.List;
 public class Utils {
 
     /**
+     * Static class, not intended to be constructed.
+     */
+    private Utils() {}
+
+    /**
      * Adds an item to the parameter source collection in chronological order.
      * @param source the source collection
      * @param selector the timestamp selector used to pull a timestamp from an item
@@ -79,8 +84,8 @@ public class Utils {
 
 
     /**
-     * Removes items from the parameter source collection that have timestamps before the watermark.
-     *
+     * Removes items from the parameter source collection that have timestamps before the watermark. Windows whose
+     * inclusive end have passed the watermark are closed and returned as part of the eviction metadata.
      *
      * Windows have inclusive starts and inclusive ends.
      *
@@ -94,7 +99,7 @@ public class Utils {
      * {@link Utils#performWatermarkedWindowedEviction(List, TimestampSelector, long, long, long, long)}
      * @param <T> the type of the items in the source collection
      */
-    static <T> EvictionMetadata<T> performWatermarkedWindowedEviction(
+    public static <T> EvictionMetadata<T> performWatermarkedWindowedEviction(
             List<T> sourceCollection,
             TimestampSelector<T> timestampSelector,
             long watermarkMs,
@@ -204,6 +209,10 @@ public class Utils {
     }
 
     /**
+     * Removes items from the parameter source collection that have timestamps before the watermark. Windows whose
+     * inclusive end have passed the watermark are closed and returned as part of the eviction metadata.
+     *
+     * Windows have inclusive starts and inclusive ends.
      *
      * @param sourceCollection the source collection.
      * @param timestampSelector the user's timestamp selector callback.

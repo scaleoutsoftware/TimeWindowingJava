@@ -22,77 +22,72 @@ import java.util.function.Consumer;
  * The SlidingWindowCollection transforms a collection into an iterable collection of overlapping time windows. This
  * wrapper class can be used to manage the retention policy and add objects in chronological order to the underlying
  * source collection.
+ *
+ * The difference between {@link SlidingWindowCollection} and {@link WatermarkedSlidingWindowCollection} is that
+ * windows in the {@link WatermarkedSlidingWindowCollection} can be closed if the watermark passes the inclusive end of
+ * a window.
+ *
+ * @param <T> the object type of the source collection.
  */
-public class SlidingWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    List<T> _source;
-    private TimestampSelector<T> _selector;
-    long _startTime;
-    long _windowDuration;
-    long _every;
+public class SlidingWindowCollection<T> extends WindowingCollection<T> {
+    private long _windowDurationMs;
+    private long _everyMs;
 
     /**
      * Instantiates a new SlidingWindowCollection
-     * @param source the underlying source collection
-     * @param selector the interface used to select a timestamp from an item
-     * @param windowDuration the duration of a time window
-     * @param every the time between the starting point of each time window
-     * @param startTime the first time an object can be in a time window -- items before the start time will be evicted from the source collection.
+     * @param sourceCollection the underlying source collection
+     * @param timestampSelector the {@link TimestampSelector} is used to pull a timestamp from an item in the source
+     *                          collection and subsequent insertions.
+     * @param startTimeMs the first time an object can be in a time window -- items before the start time will
+     *                    be evicted. The start time is also the start time of the first time window.
+     * @param windowDurationMs the duration of a time window
+     * @param everyMs the time between the starting point of each time window
+
      */
-    public SlidingWindowCollection(List<T> source, TimestampSelector<T> selector, long windowDuration, long every, long startTime) {
-        init(source, selector, windowDuration, every, startTime);
+    public SlidingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, long everyMs) {
+        super(sourceCollection, timestampSelector, startTimeMs);
+        init(windowDurationMs, everyMs);
     }
 
-    private void init(List<T> source, TimestampSelector<T> selector, long windowDuration, long every, long startTime) {
-        _source         = source;
-        _selector       = selector;
-        _windowDuration = windowDuration;
-        _every          = every;
-        _startTime      = startTime;
+    private void init(long windowDurationMs, long everyMs) {
+        _windowDurationMs   = windowDurationMs;
+        _everyMs            = everyMs;
 
         performEviction();
     }
 
-    /**
-     * Adds an item to the underlying source collection in chronological order.
-     * @param item the item to add
-     */
-    public void add(T item) {
-        if(_source.size() == 0)
-            _source.add(0, item);
-        else
-            Utils.addTimeOrdered(_source, _selector, item);
 
-        performEviction();
+
+    @Override
+    void performEviction() {
+        Utils.performEviction(_sourceCollection, _timestampSelector, _startTimeMs);
     }
 
-    private void performEviction() {
-        Utils.performEviction(_source, _selector, _startTime);
-    }
     @Override
     public Iterator<TimeWindow<T>> iterator() {
-        if(_source == null || _source.size() == 0) {
+        if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Collections.emptyIterator();
         } else {
-            long end = _selector.select(_source.get(_source.size()-1)) + 1;
-            return Windowing.toSlidingWindows(_source, _selector, _startTime, end, _windowDuration, _every).iterator();
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
+            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs, _everyMs).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
-        if(_source != null && _source.size() != 0) {
-            long end = _selector.select(_source.get(_source.size()-1)) + 1;
-            Windowing.toSlidingWindows(_source, _selector, _startTime, end, _windowDuration, _every).forEach(action);
+        if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
+            Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs, _everyMs).forEach(action);
         }
     }
 
     @Override
     public Spliterator<TimeWindow<T>> spliterator() {
-        if (_source == null || _source.size() == 0) {
+        if (_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long end = _selector.select(_source.get(_source.size() - 1)) + 1;
-            return Windowing.toSlidingWindows(_source, _selector, _startTime, end, _windowDuration, _every).spliterator();
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size() - 1)) + 1;
+            return Windowing.toSlidingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs, _everyMs).spliterator();
         }
     }
 

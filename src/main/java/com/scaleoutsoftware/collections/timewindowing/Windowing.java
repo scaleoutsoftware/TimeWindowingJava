@@ -23,6 +23,8 @@ import java.util.List;
  */
 public class Windowing {
 
+    private Windowing() { }
+
     /**
      * Transforms a List into an iterable collection of session TimeWindows.
      * @param sourceCollection the source collection

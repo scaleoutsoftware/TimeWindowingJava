@@ -21,64 +21,66 @@ import java.util.function.Consumer;
  * The TumblingWindowCollection transforms a collection into an iterable collection of sequential time windows. This
  * wrapper class can be used to manage the retention policy and add objects in chronological order to the underlying
  * source collection.
+ *
+ * The difference between {@link TumblingWindowCollection} and {@link WatermarkedTumblingWindowCollection} is that
+ * windows in the {@link WatermarkedTumblingWindowCollection} can be closed if the watermark passes the inclusive end of
+ * a window. The watermark also prevents items with timestamps that exceed the watermark from being added to the collection.
+ *
+ * @param <T> the object type of the source collection.
  */
-public class TumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    List<T> _source;
-    private TimestampSelector<T> _selector;
-    long _startTime;
-    long _windowDuration;
+public class TumblingWindowCollection<T> extends WindowingCollection<T> {
+    private long _windowDurationMs;
 
-    public TumblingWindowCollection(List<T> source, TimestampSelector<T> selector, long windowDuration, long startTime) {
-        init(source, selector, windowDuration, startTime);
+    /**
+     * Instantiates a new tumbling window collection.
+     * @param sourceCollection the underlying source collection.
+     * @param timestampSelector the {@link TimestampSelector} is used to pull a timestamp from an item in the source
+     *                          collection and subsequent insertions.
+     * @param startTimeMs the first time an object can be in a time window -- items before the start time will
+     *                    be evicted. The start time is also the start time of the first time window.
+     * @param windowDurationMs the window duration in milliseconds for each window.
+
+     */
+    public TumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs) {
+        super(sourceCollection, timestampSelector, startTimeMs);
+        init(windowDurationMs);
     }
 
-    private void init(List<T> source, TimestampSelector<T> selector, long windowDuration,  long startTime) {
-        _source         = source;
-        _selector       = selector;
-        _windowDuration = windowDuration;
-        _startTime      = startTime;
+    private void init(long windowDurationMs) {
+        _windowDurationMs   = windowDurationMs;
 
         performEviction();
     }
 
-    public void add(T item) {
-        if(_source.size() == 0)
-            _source.add(0, item);
-        else
-            Utils.addTimeOrdered(_source, _selector, item);
-
-        performEviction();
-    }
-
-    private void performEviction() {
-        Utils.performEviction(_source, _selector, _startTime);
+    void performEviction() {
+        Utils.performEviction(_sourceCollection, _timestampSelector, _startTimeMs);
     }
 
     @Override
     public Iterator<TimeWindow<T>> iterator() {
-        if(_source == null || _source.size() == 0) {
+        if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Collections.emptyIterator();
         } else {
-            long end = _selector.select(_source.get(_source.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).iterator();
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
+            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
-        if(_source != null && _source.size() != 0) {
-            long end = _selector.select(_source.get(_source.size()-1)) + 1;
-            Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).forEach(action);
+        if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
+            Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).forEach(action);
         }
     }
 
     @Override
     public Spliterator<TimeWindow<T>> spliterator() {
-        if(_source == null || _source.size() == 0) {
+        if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long end = _selector.select(_source.get(_source.size()-1)) + 1;
-            return Windowing.toTumblingWindows(_source, _selector, _startTime, end, _windowDuration).spliterator();
+            long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
+            return Windowing.toTumblingWindows(_sourceCollection, _timestampSelector, _startTimeMs, end, _windowDurationMs).spliterator();
         }
     }
 }

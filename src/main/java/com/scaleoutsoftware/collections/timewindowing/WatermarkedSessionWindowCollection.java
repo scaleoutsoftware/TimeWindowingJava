@@ -19,64 +19,43 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * The SessionWindowCollection transforms a List into an iterable collection of session windows. This wrapper
+ * The WatermarkedSessionWindowCollection transforms a List into an iterable collection of session windows. This wrapper
  * class can be used to manage the retention policy of the source collection as well as to insert new objects in
  * chronological order.
+ *
+ * The difference between {@link SessionWindowCollection} and {@link WatermarkedSessionWindowCollection} is that
+ * windows in the {@link WatermarkedSessionWindowCollection} can be closed if the watermark passes the inclusive end of
+ * a window.
+ *
+ * @param <T> the object type of the source collection.
  */
-public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    private List<T> _sourceCollection;
-    private TimestampSelector<T> _timestampSelector;
+public class WatermarkedSessionWindowCollection<T> extends WatermarkedWindowingCollection<T> {
     private long _timeoutMs;
-    private long _watermarkMs;
     private long _nextWindowStartTimeMs;
-    private WatermarkGenerator _watermarkGenerator;
 
     /**
      * Instantiates a new SessionWindowCollection
      * @param sourceCollection the underlying source collection.
-     * @param timestampSelector the selector used to pull a timestamp from an item in the source collection for subsequent insertions.
-     * @param timeoutMs the minimum amount of time between session window ranges
-     * @param watermarkGenerator used to generate a watermark. Entries that arrive before the watermark time are evicted.
+     * @param timestampSelector the {@link TimestampSelector} is used to pull a timestamp from an item in the source
+     *                          collection and subsequent insertions.
+     * @param startTimeMs the first time an object can be in a time window -- items before the start time will
+     *                    be evicted. The start time is also the start time of the first time window.
+     * @param timeoutMs the minimum amount of time between session window ranges.
+     * @param watermarkGenerator the {@link WatermarkGenerator} is used to generate a watermark. Entries that arrive
+     *                           before the watermark time are evicted. Windows whose inclusive end exceeds the watermark
+     *                           are closed.
      */
     public WatermarkedSessionWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long timeoutMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, startTimeMs, timeoutMs, watermarkGenerator);
+        super(sourceCollection, timestampSelector, startTimeMs, watermarkGenerator);
+        init(timeoutMs);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long timeoutMs, WatermarkGenerator watermarkGenerator) {
-        _sourceCollection       = sourceCollection;
-        _timestampSelector      = timestampSelector;
+    private void init(long timeoutMs) {
         _timeoutMs              = timeoutMs;
-        _nextWindowStartTimeMs  = startTimeMs;
-        _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
-        _watermarkGenerator     = watermarkGenerator;
     }
 
-    /**
-     * Adds an item to the source collection in time ordered fashion.
-     * @param item the item to add
-     */
-    public List<TimeWindow<T>> add(T item) {
-        boolean mutated = false;
-        if (_sourceCollection.isEmpty()) {
-            mutated = true; // it's possible the first item we add is immediately evicted due to watermark.
-            _sourceCollection.add(0, item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
-        } else {
-            long currentEventTimestampMs = _timestampSelector.select(item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
-            if(currentEventTimestampMs > _watermarkMs) {
-                Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
-                mutated = true;
-            }
-        }
-
-        if(mutated)
-            return performEviction();
-        else
-            return Collections.emptyList();
-    }
-
-    private List<TimeWindow<T>> performEviction() {
+    @Override
+    List<TimeWindow<T>> performEviction() {
         EvictionMetadata<T> ret = Utils.performSessionWindowEviction(_sourceCollection, _timestampSelector, _watermarkMs, _timeoutMs);
         return ret.getClosedWindows();
     }
@@ -86,18 +65,16 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
         if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Collections.emptyIterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toSessionWindows(_sourceCollection, _timestampSelector, start, end, _timeoutMs).iterator();
+            return Windowing.toSessionWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _timeoutMs).iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super TimeWindow<T>> action) {
         if(_sourceCollection != null && !_sourceCollection.isEmpty()) {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            Windowing.toSessionWindows(_sourceCollection, _timestampSelector, start, end, _timeoutMs).forEach(action);
+            Windowing.toSessionWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _timeoutMs).forEach(action);
         }
     }
 
@@ -106,9 +83,8 @@ public class WatermarkedSessionWindowCollection<T> implements Iterable<TimeWindo
         if(_sourceCollection == null || _sourceCollection.isEmpty()) {
             return Spliterators.emptySpliterator();
         } else {
-            long start = _timestampSelector.select(_sourceCollection.get(0));
             long end = _timestampSelector.select(_sourceCollection.get(_sourceCollection.size()-1)) + 1;
-            return Windowing.toSessionWindows(_sourceCollection, _timestampSelector, start, end, _timeoutMs).spliterator();
+            return Windowing.toSessionWindows(_sourceCollection, _timestampSelector, _nextWindowStartTimeMs, end, _timeoutMs).spliterator();
         }
     }
 }

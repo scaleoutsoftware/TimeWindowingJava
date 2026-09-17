@@ -23,41 +23,41 @@ import java.util.function.Consumer;
  */
 class SlidingTimeWindow<T> implements TimeWindow<T> {
 
-    private long _startTime;
-    private long _endTime;
-    private List<T> _items;
+    private long _startTimeMs;
+    private long _endTimeMs;
+    private List<T> _windowContents;
 
-    SlidingTimeWindow(long startTime, long endTime) {
-        _startTime  = startTime;
-        _endTime    = endTime;
+    SlidingTimeWindow(long startTimeMs, long endTimeMs) {
+        _startTimeMs    = startTimeMs;
+        _endTimeMs      = endTimeMs;
     }
 
-    SlidingTimeWindow(long startTime, long endTime, List<T> items) {
-        _startTime  = startTime;
-        _endTime    = endTime;
-        _items      = items;
+    SlidingTimeWindow(long startTimeMs, long endTimeMs, List<T> windowContents) {
+        _startTimeMs        = startTimeMs;
+        _endTimeMs          = endTimeMs;
+        _windowContents     = windowContents;
     }
 
     /**
      * Set the items in this window from the parameter source collection
-     * @param source the source collection to pull items from
+     * @param sourceCollection the source collection to pull items from
      * @param startIndex the index to start scanning from
-     * @param selector the selector used to pull timestamps from items
+     * @param timestampSelector the selector used to pull timestamps from items
      * @return the last index touched
      */
-    int setItems(List<T> source, int startIndex, TimestampSelector<T> selector) {
+    int setItems(List<T> sourceCollection, int startIndex, TimestampSelector<T> timestampSelector) {
         boolean foundItem = false;
         LinkedList<T> items = null;
         int i;
         // loop from the last index used, until we run out of items or the timestamp is greater than the end time
         // for this window
-        for(i = startIndex; i < source.size(); i++) {
-            T item = source.get(i);
-            long timestamp = selector.select(item);
-            if(timestamp < _startTime)
+        for(i = startIndex; i < sourceCollection.size(); i++) {
+            T item = sourceCollection.get(i);
+            long timestamp = timestampSelector.select(item);
+            if(timestamp < _startTimeMs)
                 continue;
 
-            if(timestamp >= _endTime)
+            if(timestamp >= _endTimeMs)
                 break;
 
             if(!foundItem) {
@@ -69,66 +69,57 @@ class SlidingTimeWindow<T> implements TimeWindow<T> {
             items.add(item);
         }
 
-        _items = items;
+        _windowContents = items;
         return startIndex;
     }
 
     @Override
     public int size() {
-        if(_items == null) {
+        if(_windowContents == null) {
             return 0;
         } else {
-            return _items.size();
+            return _windowContents.size();
         }
     }
 
     @Override
-    public List<T> getItems() {
-        if(_items == null) return Collections.emptyList();
-        return _items;
+    public List<T> getWindowContents() {
+        if(_windowContents == null) return Collections.emptyList();
+        return _windowContents;
     }
 
     @Override
     public long getStartTimeMs() {
-        return _startTime;
+        return _startTimeMs;
     }
 
     @Override
     public long getEndTimeMs() {
-        return _endTime;
+        return _endTimeMs;
     }
 
     @Override
     public Iterator<T> iterator() {
-        if(_items == null)
+        if(_windowContents == null)
             return Collections.emptyIterator();
         else {
-            return _items.iterator();
+            return _windowContents.iterator();
         }
     }
 
     @Override
     public void forEach(Consumer<? super T> action) {
-        if(_items != null && _items.size() > 0) {
-            _items.forEach(action);
+        if(_windowContents != null && _windowContents.size() > 0) {
+            _windowContents.forEach(action);
         }
     }
 
     @Override
     public Spliterator<T> spliterator() {
-        if(_items == null) {
+        if(_windowContents == null) {
             return Spliterators.emptySpliterator();
         } else {
-            return _items.spliterator();
+            return _windowContents.spliterator();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "SlidingTimeWindow{" +
-                "_startTime=" + _startTime +
-                ", _endTime=" + _endTime +
-                ", size=" + (_items == null ? 0 : _items.size()) +
-                '}';
     }
 }

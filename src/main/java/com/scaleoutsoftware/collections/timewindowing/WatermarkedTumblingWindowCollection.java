@@ -21,59 +21,42 @@ import java.util.function.Consumer;
  * The TumblingWindowCollection transforms a collection into an iterable collection of sequential time windows. This
  * wrapper class can be used to manage the retention policy and add objects in chronological order to the underlying
  * source collection.
+ *
+ * The difference between {@link TumblingWindowCollection} and {@link WatermarkedTumblingWindowCollection} is that
+ * windows in the {@link WatermarkedTumblingWindowCollection} can be closed if the watermark passes the inclusive end of
+ * a window. The watermark also prevents items with timestamps that exceed the watermark from being added to the collection.
+ *
+ * @param <T> the object type of the source collection.
  */
-public class WatermarkedTumblingWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    private List<T> _sourceCollection;
-    private TimestampSelector<T> _timestampSelector;
+public class WatermarkedTumblingWindowCollection<T> extends WatermarkedWindowingCollection<T> {
     private long _windowDurationMs;
-    private long _watermarkMs;
     private long _nextWindowStartTimeMs;
-    private WatermarkGenerator _watermarkGenerator;
+
     /**
-     *
-     * @param sourceCollection
-     * @param timestampSelector
-     * @param windowDurationMs
-     * @param watermarkGenerator
+     * Instantiates a new WatermarkedTumblingWindowCollection
+     * @param sourceCollection the underlying source collection.
+     * @param timestampSelector the {@link TimestampSelector} is used to pull a timestamp from an item in the source
+     *                          collection and subsequent insertions.
+     * @param startTimeMs the first time an object can be in a time window -- items before the start time will
+     *                    be evicted. The start time is also the start time of the first time window.
+     * @param windowDurationMs the window duration in milliseconds for each window.
+     * @param watermarkGenerator the {@link WatermarkGenerator} is used to generate a watermark. Entries that arrive
+     *                           before the watermark time are evicted. Windows whose inclusive end exceeds the watermark
+     *                           are closed.
      */
     public WatermarkedTumblingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, startTimeMs, windowDurationMs, watermarkGenerator);
+        super(sourceCollection, timestampSelector, startTimeMs, watermarkGenerator);
+        init(windowDurationMs);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, WatermarkGenerator watermarkGenerator) {
-        if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null.");
-        if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null.");
+    private void init(long windowDurationMs) {
         if(windowDurationMs <= 0) throw new IllegalArgumentException("window duration is <= 0");
-        if(watermarkGenerator == null) throw new IllegalArgumentException("watermark generator is null");
-        _sourceCollection       = sourceCollection;
-        _timestampSelector      = timestampSelector;
         _windowDurationMs       = windowDurationMs;
-        _nextWindowStartTimeMs  = startTimeMs;
-        _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
-        _watermarkGenerator     = watermarkGenerator;
+        _nextWindowStartTimeMs  = _startTimeMs;
     }
 
-    public List<TimeWindow<T>> add(T item) {
-        boolean mutated = false;
-        if (_sourceCollection.isEmpty()) {
-            _sourceCollection.add(0, item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
-            mutated = true;
-        } else {
-            long currentEventTimestampMs = _timestampSelector.select(item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
-            if(currentEventTimestampMs > _watermarkMs) {
-                Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
-                mutated = true;
-            }
-        }
-        if(mutated)
-            return performEviction();
-        else
-            return Collections.emptyList();
-    }
-
-    private List<TimeWindow<T>> performEviction() {
+    @Override
+    List<TimeWindow<T>> performEviction() {
         EvictionMetadata<T> ret = Utils.performWatermarkedWindowedEviction(
                 _sourceCollection,
                 _timestampSelector,

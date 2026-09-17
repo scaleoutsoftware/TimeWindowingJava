@@ -15,7 +15,6 @@
 */
 package com.scaleoutsoftware.collections.timewindowing;
 
-import com.scaleoutsoftware.collections.timewindowing.samples.Sample;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -157,7 +156,7 @@ public class WindowingTests {
         assertEquals(0, window.getStartTimeMs());
         assertEquals(10, window.getEndTimeMs());
 
-        assertTrue(!window.getItems().isEmpty() &&window.getItems().size() <= 11);
+        assertTrue(!window.getWindowContents().isEmpty() &&window.getWindowContents().size() <= 11);
 
         for (TestObject item : window) {
             long itemTimestamp = item.getTimestamp();
@@ -195,7 +194,7 @@ public class WindowingTests {
 
             assertEquals("Unexpected window end at index " + i, expectedEndTimeMs, window.getEndTimeMs());
 
-            List<TestObject> items = window.getItems();
+            List<TestObject> items = window.getWindowContents();
 
             assertEquals("Unexpected item count for window at index " + i, 11, items.size());
 
@@ -246,12 +245,13 @@ public class WindowingTests {
         long start = 1;
         long duration = 10;
         long middle = 50;
+        long end = 101;
         ArrayList<TestObject> collection = new ArrayList<TestObject>();
 
         TumblingWindowCollection<TestObject> swc = new TumblingWindowCollection<>(collection,
                 TestObject::getTimestamp,
-                10,
-                start);
+                start,
+                duration);
 
 
         for(int i = 1; i <= numElements; i++) {
@@ -262,15 +262,15 @@ public class WindowingTests {
 
         TumblingWindowCollection<TestObject> twcEvictHalf = new TumblingWindowCollection<>(collection,
                 TestObject::getTimestamp,
-                duration,
-                middle+1); // make window 41-51 close
+                middle+1,
+                duration); // make window 41-51 close
 
         assertEquals(50, collection.size());
 
         TumblingWindowCollection<TestObject> twcEvict = new TumblingWindowCollection<>(collection,
                 TestObject::getTimestamp,
-                duration,
-                101);
+                end, // go over the end time of all elements currently in the collection
+                duration);
 
         assertEquals(0, collection.size());
     }
@@ -284,8 +284,8 @@ public class WindowingTests {
 
         TumblingWindowCollection<TestObject> swc = new TumblingWindowCollection<>(test,
                 TestObject::getTimestamp,
-                duration,
-                start);
+                start,
+                duration);
         for(int i = 1; i <= numElements; i++) {
             swc.add(new TestObject(i));
         }
@@ -302,7 +302,7 @@ public class WindowingTests {
     }
 
     @Test
-    public void testUtilsAdd() {
+    public void testAdd() {
         int numElements = 100;
         long start = 1;
         long duration = 20;
@@ -310,8 +310,8 @@ public class WindowingTests {
 
         TumblingWindowCollection<TestObject> twc = new TumblingWindowCollection<>(tumblingSource,
                 TestObject::getTimestamp,
-                duration,
-                start);
+                start,
+                duration);
         for(int i = 0; i <= numElements; i++) {
             twc.add(new TestObject(i));
         }
@@ -320,16 +320,16 @@ public class WindowingTests {
     }
 
     @Test
-    public void TestUtilsAddToFront() {
+    public void TestAddToFront() {
         ArrayList<TestObject> list = new ArrayList<>(25);
         long start = 0;
         long every = 10;
         long duration = 20;
         SlidingWindowCollection<TestObject> swc = new SlidingWindowCollection<TestObject>(list,
                 TestObject::getTimestamp,
+                start,
                 duration,
-                every,
-                start);
+                every);
         swc.add(new TestObject(2));
         swc.add(new TestObject(1));
         assertEquals(2, list.size());

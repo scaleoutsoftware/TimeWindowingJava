@@ -18,28 +18,46 @@ package com.scaleoutsoftware.collections.timewindowing;
 import java.util.List;
 
 /**
- * Eviction metadata stores metadata for the result of a eviction routine
- * @param <T> the type of the objects in the collection
+ * Eviction metadata stores metadata for the result of an eviction routine.
+ * @param <T> the type of the objects in the collection.
  */
-class EvictionMetadata<T> {
+public class EvictionMetadata<T> {
     private final long _nextWindowStartTimeMs;
     private final List<TimeWindow<T>> _closedWindows;
 
-    EvictionMetadata(List<TimeWindow<T>> closedWindows) {
-        _closedWindows = closedWindows;
-        _nextWindowStartTimeMs = Long.MIN_VALUE;
+    /**
+     * Construct a new eviction metadata instance with a list of closed windows.
+     * @param closedWindows the closed windows.
+     */
+    public EvictionMetadata(List<TimeWindow<T>> closedWindows) {
+        _closedWindows          = closedWindows;
+        _nextWindowStartTimeMs  = Long.MIN_VALUE;
     }
 
+    /**
+     * Construct a new eviction metadata instance with a list of a closed windows and the next window start time
+     * for the source collection eviction was performed on.
+     * @param closedWindows the closed windows.
+     * @param nextWindowStartTimeMs the next windows start time in milliseconds.
+     */
     EvictionMetadata(List<TimeWindow<T>> closedWindows, long nextWindowStartTimeMs) {
-        _closedWindows = closedWindows;
-        _nextWindowStartTimeMs = nextWindowStartTimeMs;
+        _closedWindows          = closedWindows;
+        _nextWindowStartTimeMs  = nextWindowStartTimeMs;
     }
 
-    List<TimeWindow<T>> getClosedWindows() {
+    /**
+     * Retrieves the closed windows.
+     * @return the closed windows.
+     */
+    public List<TimeWindow<T>> getClosedWindows() {
         return _closedWindows;
     }
 
-    long getNextWindowStartTimeMs() {
+    /**
+     * Retrieves the next window start time in milliseconds.
+     * @return the next window start time in milliseconds.
+     */
+    public long getNextWindowStartTimeMs() {
         return _nextWindowStartTimeMs;
     }
 }

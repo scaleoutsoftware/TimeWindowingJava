@@ -18,7 +18,13 @@ package com.scaleoutsoftware.collections.timewindowing;
 
 /**
  * The TimestampSelector is used to pull a timestamp from an object.
+ * @param <T> the object type of the source collection.
  */
 public interface TimestampSelector<T> {
-    long select(T t);
+    /**
+     * Select the timestamp from an item.
+     * @param item the item to select the timestamp from.
+     * @return the timestamp in milliseconds.
+     */
+    long select(T item);
 }

@@ -45,4 +45,12 @@ public class LatenessToleranceWatermarkGenerator implements WatermarkGenerator {
 
         return _currentWaterMarkMs;
     }
+
+    /**
+     * Returns the current watermark in milliseconds.
+     * @return the current watermark in milliseconds.
+     */
+    public long currentWaterMarkMs() {
+        return _currentWaterMarkMs;
+    }
 }

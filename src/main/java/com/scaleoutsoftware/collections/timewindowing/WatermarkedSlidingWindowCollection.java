@@ -22,69 +22,46 @@ import java.util.function.Consumer;
  * The SlidingWindowCollection transforms a collection into an iterable collection of overlapping time windows. This
  * wrapper class can be used to manage the retention policy and add objects in chronological order to the underlying
  * source collection.
+ *
+ * The difference between {@link SlidingWindowCollection} and {@link WatermarkedSlidingWindowCollection} is that
+ * windows in the {@link WatermarkedSlidingWindowCollection} can be closed if the watermark passes the inclusive end of
+ * a window. The watermark also prevents items with timestamps that exceed the watermark from being added to the collection.
+ *
+ * @param <T> the object type of the source collection.
  */
-public class WatermarkedSlidingWindowCollection<T> implements Iterable<TimeWindow<T>> {
-    private List<T> _sourceCollection;
-    private TimestampSelector<T> _timestampSelector;
+public class WatermarkedSlidingWindowCollection<T> extends WatermarkedWindowingCollection<T> {
     private long _windowDurationMs;
     private long _everyMs;
-    private long _watermarkMs;
     private long _nextWindowStartTimeMs;
-    private WatermarkGenerator _watermarkGenerator;
 
     /**
-     * Instantiates a new SlidingWindowCollection
+     * Instantiates a new WatermarkedSlidingWindowCollection.
      * @param sourceCollection the underlying source collection
-     * @param timestampSelector the interface used to select a timestamp from an item
+     * @param timestampSelector the {@link TimestampSelector} is used to pull a timestamp from an item in the source
+     *                          collection and subsequent insertions.
+     * @param startTimeMs the first time an object can be in a time window -- items before the start time will
+     *                    be evicted. The start time is also the start time of the first time window.
      * @param windowDurationMs the duration of a time window
      * @param everyMs the time between the starting point of each time window
-     * @param watermarkGenerator used to generate a watermark. Entries that arrive before the watermark time are evicted.
+     * @param watermarkGenerator the {@link WatermarkGenerator} is used to generate a watermark. Entries that arrive
+     *                           before the watermark time are evicted. Windows whose inclusive end exceeds the watermark
+     *                           are closed.
      */
     public WatermarkedSlidingWindowCollection(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
-        init(sourceCollection, timestampSelector, startTimeMs, windowDurationMs, everyMs, watermarkGenerator);
+        super(sourceCollection, timestampSelector, startTimeMs, watermarkGenerator);
+        init(windowDurationMs, everyMs);
     }
 
-    private void init(List<T> sourceCollection, TimestampSelector<T> timestampSelector, long startTimeMs, long windowDurationMs, long everyMs, WatermarkGenerator watermarkGenerator) {
-        if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null in param.");
-        if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null in param.");
+    private void init(long windowDurationMs, long everyMs) {
         if(windowDurationMs <=0) throw new IllegalArgumentException("window duration is <= 0 in param");
         if(everyMs <= 0) throw new IllegalArgumentException("everyMs is <= 0 in param");
-        if(watermarkGenerator == null) throw new IllegalArgumentException("watermark generator is null in param");
-        _sourceCollection       = sourceCollection;
-        _timestampSelector      = timestampSelector;
         _windowDurationMs       = windowDurationMs;
         _everyMs                = everyMs;
-        _nextWindowStartTimeMs  = startTimeMs;
-        _watermarkGenerator     = watermarkGenerator;
+        _nextWindowStartTimeMs  = _startTimeMs;
     }
 
-    /**
-     * Adds an item to the underlying source collection in chronological order.
-     * @param item the item to add
-     * @return returns closed windows
-     */
-    public List<TimeWindow<T>> add(T item) {
-        boolean mutated = false;
-        if (_sourceCollection.isEmpty()) {
-            mutated = true; // it's possible the first item we add is immediately evicted due to watermark.
-            _sourceCollection.add(0, item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
-        } else {
-            long currentEventTimestampMs = _timestampSelector.select(item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
-            if(currentEventTimestampMs > _watermarkMs) {
-                Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
-                mutated = true;
-            }
-        }
-
-        if(mutated)
-            return performEviction();
-        else
-            return Collections.emptyList();
-    }
-
-    private List<TimeWindow<T>> performEviction() {
+    @Override
+    List<TimeWindow<T>> performEviction() {
         EvictionMetadata<T> ret = Utils.performWatermarkedWindowedEviction(
                 _sourceCollection,
                 _timestampSelector,

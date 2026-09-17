@@ -57,7 +57,7 @@ public class UtilsTest {
         // Assert window bounds [0, 100)
         assertEquals(0, closedWindow.getStartTimeMs());
         assertEquals(100, closedWindow.getEndTimeMs());
-        List<TestObject> items = closedWindow.getItems();
+        List<TestObject> items = closedWindow.getWindowContents();
         assertEquals(50, items.size());
         for (int i = 0; i < 50; i++) {
             assertEquals(i + 1, items.get(i).getTimestamp());
@@ -95,7 +95,7 @@ public class UtilsTest {
         TimeWindow<TestObject> closedWindow = closedWindows.get(0);
         assertEquals(0, closedWindow.getStartTimeMs());
         assertEquals(50, closedWindow.getEndTimeMs());
-        List<TestObject> items = closedWindow.getItems();
+        List<TestObject> items = closedWindow.getWindowContents();
         assertEquals(50, items.size());
         for (int i = 0; i < 50; i++) {
             assertEquals(i + 1, items.get(i).getTimestamp());
@@ -159,7 +159,7 @@ public class UtilsTest {
                 long itemTimestamp = item.getTimestamp();
                 assertTrue(itemTimestamp>=expectedStartTimeMs && itemTimestamp<=expectedEndTimeMs);
             }
-            List<TestObject> items = window.getItems();
+            List<TestObject> items = window.getWindowContents();
             // first window has only 10 elements (starts at 1)
             if(i == 0) {
                 assertEquals(10, items.size());
@@ -266,10 +266,10 @@ public class UtilsTest {
         assertEquals(0, window.getStartTimeMs());
         assertEquals(3, window.getEndTimeMs());
 
-        assertEquals(4, window.getItems().size());
+        assertEquals(4, window.getWindowContents().size());
 
         for (int i = 0; i < 4; i++) {
-            assertEquals(i, window.getItems().get(i).getTimestamp());
+            assertEquals(i, window.getWindowContents().get(i).getTimestamp());
         }
 
         /*
@@ -357,10 +357,10 @@ public class UtilsTest {
 
             assertEquals(expectedWindows[i][1], window.getEndTimeMs());
 
-            assertEquals(expectedItems[i].length, window.getItems().size());
+            assertEquals(expectedItems[i].length, window.getWindowContents().size());
 
             for (int j = 0; j < expectedItems[i].length; j++) {
-                assertEquals(expectedItems[i][j], window.getItems().get(j).getTimestamp());
+                assertEquals(expectedItems[i][j], window.getWindowContents().get(j).getTimestamp());
             }
         }
 

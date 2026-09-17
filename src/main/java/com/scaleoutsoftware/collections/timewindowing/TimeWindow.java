@@ -15,11 +15,11 @@
 */
 package com.scaleoutsoftware.collections.timewindowing;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Supports iteration over a collection of elements that fall within the given start and end timestamps.
+ * @param <T> the object type of the source collection.
  */
 public interface TimeWindow<T> extends Iterable<T> {
 
@@ -45,5 +45,5 @@ public interface TimeWindow<T> extends Iterable<T> {
      * Retrieves the items of the window as a list.
      * @return a list of the items in the window.
      */
-    List<T> getItems();
+    List<T> getWindowContents();
 }
