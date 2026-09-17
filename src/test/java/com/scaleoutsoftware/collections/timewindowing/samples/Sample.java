@@ -54,9 +54,9 @@ public class Sample {
         SlidingWindowCollection<HeartRate> swc = new SlidingWindowCollection<HeartRate>(
                 person.getHeartRates(),
                 HeartRate::getTimestamp,
+                start,
                 duration,
-                every,
-                start);
+                every);
 
         // create and print a sliding average
         double slidingAverage = 0;
