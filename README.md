@@ -53,7 +53,7 @@ details.
 
 Three methods are provided to break up an iterable collection into
 different kinds of time windows. These are available as static
-methods in the `com.scaleoutsoftware.streaming.timewindowing.Windowing` class:
+methods in the `com.scaleoutsoftware.collections.timewindowing.Windowing` class:
 
 1. toSlidingWindows:
    Transforms a collection into an iterable collection of overlapped
