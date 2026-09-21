@@ -19,15 +19,26 @@ package com.scaleoutsoftware.collections.timewindowing;
  * The LatenessToleranceWatermarkGenerator generates watermarks with a constant lateness tolerance.
  */
 public class LatenessToleranceWatermarkGenerator implements WatermarkGenerator {
-    private final long _latenessToleranceMs;
-    private long _currentWaterMarkMs = Long.MIN_VALUE;
+    private final long latenessToleranceMs;
+    private long currentWaterMarkMs = Long.MIN_VALUE;
 
     /**
      * Constructs a new LatenessToleranceWatermarkGenerator with a constant lateness tolerance.
      * @param latenessToleranceMs the lateness tolerance in milliseconds.
      */
     public LatenessToleranceWatermarkGenerator(long latenessToleranceMs) {
-        _latenessToleranceMs = latenessToleranceMs;
+        this.latenessToleranceMs = latenessToleranceMs;
+    }
+
+    /**
+     * Constructs a new LatenessToleranceWatermarkGenerator with a constant lateness tolerance and the current watermark
+     * in milliseconds.
+     * @param latenessToleranceMs the lateness tolerance in milliseconds.
+     * @param currentWaterMarkMs the current watermark in milliseconds.
+     */
+    public LatenessToleranceWatermarkGenerator(long latenessToleranceMs, long currentWaterMarkMs) {
+        this.latenessToleranceMs = latenessToleranceMs;
+        this.currentWaterMarkMs = currentWaterMarkMs;
     }
 
     /**
@@ -37,20 +48,12 @@ public class LatenessToleranceWatermarkGenerator implements WatermarkGenerator {
      */
     @Override
     public long generateWatermark(long lastEventTimestampMs) {
-        long watermarkOption = lastEventTimestampMs - _latenessToleranceMs;
+        long watermarkOption = lastEventTimestampMs - latenessToleranceMs;
 
-        if (watermarkOption > _currentWaterMarkMs) {
-            _currentWaterMarkMs = watermarkOption;
+        if (watermarkOption > currentWaterMarkMs) {
+            currentWaterMarkMs = watermarkOption;
         }
 
-        return _currentWaterMarkMs;
-    }
-
-    /**
-     * Returns the current watermark in milliseconds.
-     * @return the current watermark in milliseconds.
-     */
-    public long currentWaterMarkMs() {
-        return _currentWaterMarkMs;
+        return currentWaterMarkMs;
     }
 }
