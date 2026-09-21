@@ -28,15 +28,15 @@ public abstract class WindowingCollection<T> implements Iterable<TimeWindow<T>> 
     /**
      * The source collection of items for a windowing collection.
      */
-    protected List<T> _sourceCollection;
+    public List<T> _sourceCollection;
     /**
      * The timestamp selector is used to select a timestamp from an element in the source collection.
      */
-    protected TimestampSelector<T> _timestampSelector;
+    public TimestampSelector<T> _timestampSelector;
     /**
      * The inclusive start time of first window of a windowing collection.
      */
-    protected long _startTimeMs;
+    public long _startTimeMs;
 
     /**
      * Instantiate a new WindowingCollection.

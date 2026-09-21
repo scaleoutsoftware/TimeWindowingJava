@@ -32,23 +32,23 @@ public abstract class WatermarkedWindowingCollection<T> implements Iterable<Time
     /**
      * The source collection of items for the watermarked windowing collection.
      */
-    protected List<T> _sourceCollection;
+    protected List<T> sourceCollection;
     /**
      * The timestamp selector is used to select a timestamp from an element in the source collection.
      */
-    protected TimestampSelector<T> _timestampSelector;
-    /**
-     * The inclusive start time of first window of a windowing collection.
-     */
-    protected long _startTimeMs;
+    protected TimestampSelector<T> timestampSelector;
     /**
      * The watermark generator is used to generate a watermark for the windowing collection.
      */
-    protected WatermarkGenerator _watermarkGenerator;
+    protected WatermarkGenerator watermarkGenerator;
     /**
      * The current watermark of the windowing collection.
      */
-    protected long _watermarkMs;
+    protected long watermarkMs;
+    /**
+     * The inclusive start time of first window of a windowing collection.
+     */
+    protected long startTimeMs;
 
     /**
      * Instantiates a new SlidingWindowCollection
@@ -65,11 +65,11 @@ public abstract class WatermarkedWindowingCollection<T> implements Iterable<Time
         if(sourceCollection == null) throw new IllegalArgumentException("Source collection is null.");
         if(timestampSelector == null) throw new IllegalArgumentException("timestampSelector is null.");
         if(watermarkGenerator == null) throw new IllegalArgumentException("watermark generator is null");
-        _sourceCollection       = sourceCollection;
-        _timestampSelector      = timestampSelector;
-        _startTimeMs            = startTimeMs;
-        _watermarkGenerator     = watermarkGenerator;
-        _watermarkMs            = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
+        this.sourceCollection = sourceCollection;
+        this.timestampSelector = timestampSelector;
+        this.startTimeMs = startTimeMs;
+        this.watermarkGenerator = watermarkGenerator;
+        watermarkMs = sourceCollection.isEmpty() ? Long.MIN_VALUE : timestampSelector.select(sourceCollection.get(sourceCollection.size()-1));
     }
 
     /**
@@ -85,15 +85,15 @@ public abstract class WatermarkedWindowingCollection<T> implements Iterable<Time
      */
     public List<TimeWindow<T>> add(T item) {
         boolean mutated = false;
-        if (_sourceCollection.isEmpty()) {
-            _sourceCollection.add(0, item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(_timestampSelector.select(item));
+        if (sourceCollection.isEmpty()) {
+            sourceCollection.add(0, item);
+            watermarkMs = watermarkGenerator.generateWatermark(timestampSelector.select(item));
             mutated = true;
         } else {
-            long currentEventTimestampMs = _timestampSelector.select(item);
-            _watermarkMs = _watermarkGenerator.generateWatermark(currentEventTimestampMs);
-            if(currentEventTimestampMs > _watermarkMs) {
-                Utils.addTimeOrdered(_sourceCollection, _timestampSelector, item);
+            long currentEventTimestampMs = timestampSelector.select(item);
+            watermarkMs = watermarkGenerator.generateWatermark(currentEventTimestampMs);
+            if(currentEventTimestampMs > watermarkMs) {
+                Utils.addTimeOrdered(sourceCollection, timestampSelector, item);
                 mutated = true;
             }
         }
@@ -101,6 +101,46 @@ public abstract class WatermarkedWindowingCollection<T> implements Iterable<Time
             return performEviction();
         else
             return Collections.emptyList();
+    }
+
+    /**
+     * Retrieves the source collection.
+     * @return the source collection.
+     */
+    public List<T> getSourceCollection() {
+        return sourceCollection;
+    }
+
+    /**
+     * Retrieve the timestamp selector.
+     * @return the timestamp selector.
+     */
+    public TimestampSelector<T> getTimestampSelector() {
+        return timestampSelector;
+    }
+
+    /**
+     * Retrieve the start time in milliseconds.
+     * @return the start time in milliseconds.
+     */
+    public long getStartTimeMs() {
+        return startTimeMs;
+    }
+
+    /**
+     * Retrieve the watermark generator.
+     * @return the watermark generator.
+     */
+    public WatermarkGenerator getWatermarkGenerator() {
+        return watermarkGenerator;
+    }
+
+    /**
+     * Return the current watermark in milliseconds.
+     * @return the watermark in milliseconds.
+     */
+    public long getWatermarkMs() {
+        return watermarkMs;
     }
 
     abstract List<TimeWindow<T>> performEviction();
