@@ -73,7 +73,7 @@ to. The collection _must_ be sorted chronologically with respect to
 the returned timestamp.
 
 Each method returns a collection of
-**[TimeWindow](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/TimeWindow.html)**
+**[TimeWindow](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/TimeWindow.html)**
 objects. A `TimeWindow` instance is itself an iterable collection
 of the elements in the source collection whose timestamps fall within
 the window's time span.
@@ -185,23 +185,34 @@ sorted.)
 </dl>
 
 <a name="WrapperClasses"></a>
-## Wrapper Classes
+## Time Windowing Collections
 
 In addition to the static methods detailed above, the library
-provides wrapper classes to aid in the management and processing
+provides windowing collections to aid in the management and processing
 of time-ordered events. The
-**[SessionWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/SessionWindowCollection.html)**,
-**[SlidingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/SlidingWindowCollection.html)**,
+**[SessionWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/SessionWindowCollection.html)**,
+**[SlidingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/SlidingWindowCollection.html)**,
+**[TumblingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/TumblingWindowCollection.html)**
+**[WatermarkedSessionWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/WatermarkedSessionWindowCollection.html)**,
+**[WatermarkedSlidingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/WatermarkedSlidingWindowCollection.html)**,
 and
-**[TumblingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/streaming/timewindowing/TumblingWindowCollection.html)**
+**[WatermarkedTumblingWindowCollection](https://scaleoutsoftware.github.io/TimeWindowingJava/com/scaleoutsoftware/collections/timewindowing/WatermarkedTumblingWindowCollection.html)**
 classes wrap a source List (ArrayList will provide the best performance) and manage its elements.
 
-These wrapper classes are intended to be used as alternatives to the
+There are two types of windowing collections:
+
+1) Time Ordered Collections
+2) Watermarked Collections
+
+These classes are intended to be used as alternatives to the
 library's static methods when the underlying elements are accessed
 primarily as a windowed collection. It is therefore expected that the
 elements in the underlying source collection will only be accessed and
-modified through the chosen wrapper. These wrappers perform the
-following work on your behalf:
+modified through the chosen wrapper class.
+
+### Time Ordered Collections
+
+These wrappers perform the following work on your behalf:
 
 * **Eviction:** Eviction of elements is automatically handled, as
   specified by the policy passed into the wrapper's
@@ -211,23 +222,121 @@ following work on your behalf:
 * **Ordering:** When elements are added through a wrapper's `Add()`
   method, it is inserted into the underlying collection in the correct
   chronological position.
-  
+
 Once constructed, the wrapper can be iterated over to access its
 associated time windows.
 
-### Sliding Window Wrapper
+#### Sliding Window Collection
 
 The `SlidingWindowCollection<T>` class provides the following constructor:
 
     public SlidingWindowCollection(
-		List<T> source, 
-		TimestampSelector<T> selector, 
-		long windowDuration, 
-		long every, 
-		long startTime) 
+		List<T> sourceCollection, 
+		TimestampSelector<T> timestampSelector, 
+		long windowDurationMs, 
+		long everyMs, 
+		long startTimeMs) 
 
 The parameters to this constructor are similar to the parameters to
-the `toSlidingWindows` method, except that the `startTime`
+the `toSlidingWindows` method, except that the `startTimeMs`
+parameter defines the eviction policy for the collection as well as
+the starting point for the windowing transform--elements with
+timestamps prior to `startTimeMs` will be removed from the source
+collection.
+
+Also, there is no `endTimeMs` parameter in the wrapper's constructor
+like there is in the `toSlidingWindows` method. When iterating
+through sliding windows exposed by the wrapper, the end time is
+implicitly set to the last (most recent) element in the source
+collection.
+
+Once constructed, the wrapper's `add()` method should be used to add
+elements to the source list.
+
+#### Tumbling Window Collection
+
+The `TumblingWindowCollection<T>` class provides the following constructor:
+
+    public TumblingWindowCollection(
+		List<T> sourceCollection, 
+		TimestampSelector<T> timestampSelector, 
+		long windowDurationMs, 
+		long startTimeMs)
+
+The parameters to this constructor are similar to the parameters to
+the `toTumblingWindows` method, except that the `startTimeMs`
+parameter defines the eviction policy for the collection as well as
+the starting point for the windowing transform. Elements with
+timestamps prior to `startTimeMs` will be removed from the source
+collection.
+
+Also, there is no `endTimeMs` parameter in the wrapper's constructor
+like there is in the `toTumblingWindows` method. When iterating
+through windows exposed by the wrapper, the end time is implicitly set
+to the last (most recent) element in the source collection.
+
+Once constructed, the wrapper's `add()` method should be used to add
+elements to the source list.
+
+#### Session Window Collection
+
+The `SessionWindowCollection<T>` class provides the following constructor:
+
+    public SessionWindowCollection(
+		List<T> sourceCollection, 
+		TimestampSelector<T> timestampSelector, 
+		long startTimeMs,
+		long idleThreshold)
+
+The parameters to this constructor are similar to the parameters to
+the `toSessionWindows` method, except that the `startTimeMs`
+parameter defines the eviction policy for the collection as well as
+the starting point for the windowing transform. Elements with
+timestamps prior to `startTimeMs` will be removed from the source
+collection.
+
+Also, there is no `endTimeMs` parameter in the wrapper's constructor
+like there is in the `toSessionWindows` method. When iterating
+through windows exposed by the wrapper, the end time is implicitly set
+to the last (most recent) element in the source collection.
+
+Once constructed, the wrapper's `add()` method should be used to add
+elements to the source collection instead of adding elements directly
+to the source collection. If the wrapper's `add()` operation results
+in the creation of a new session window then it may evict elements in
+accordance to the wrapper's `startTimeMs` policy.
+
+### Watermarked Collections
+
+These wrappers perform the following work on your behalf:
+
+* **Watermarking:** The collections maintain a watermark based on the timestamp 
+  from elements that are added to the collection via the `add()` method. The library provides a 
+  `LatenessToleranceWatermarkGenerator` which will allow elements to be added with a fixed lateness tolerance.
+* **Window Closure:** When the watermark passes the inclusive end of a window,
+  that window is closed because no new events can be added to the window. Closed windows
+  are returned from the `add()` method. 
+* **Eviction:** Elements that reside exclusively in closed windows are evicted from the source collection. Eviction is 
+  performed when new items are added through the wrapper's `add()` method.
+* **Ordering:** When elements are added through a wrapper's `add()`
+  method, the timestamp of the incoming event is checked against the collections current watermark. If the events 
+  timestamp is after the watermark, then a new watermark is generated from the incoming event and the event is inserted 
+  into the underlying collection in the correct chronological position.
+
+#### Watermarked Sliding Window Collection
+
+The `WatermarkedSlidingWindowCollection<T>` class provides the following constructor:
+
+    public WatermarkedSlidingWindowCollection(
+        List<T> sourceCollection, 
+        TimestampSelector<T> timestampSelector,
+        long startTimeMs,
+        long windowDurationMs, 
+        long everyMs,
+        WatermarkGenerator generator) 
+
+The parameters to this constructor are similar to the parameters to
+the `toSlidingWindows` method, except that the `startTimeMs`
 parameter defines the eviction policy for the collection as well as
 the starting point for the windowing transform--elements with
 timestamps prior to `startTime` will be removed from the source
@@ -240,60 +349,70 @@ implicitly set to the last (most recent) element in the source
 collection.
 
 Once constructed, the wrapper's `add()` method should be used to add
-elements to the source list.
+elements to the source list. If an `add()` causes `TimeWindows` to close, 
+then those TimeWindows will be returned to the caller of the `add()` method.
 
-### Tumbling Window Wrapper
+Elements that reside exclusively in the closed `TimeWindow` will be evicted.
 
-The `TumblingWindowCollection<T>` class provides the following constructor:
+#### Watermarked Tumbling Window Collection
 
-    public TumblingWindowCollection(
-		List<T> source, 
-		TimestampSelector<T> selector,
-		long windowDuration, 
-		long startTime)
+The `WatermarkedTumblingWindowCollection<T>` class provides the following constructor:
 
-The parameters to this constructor are similar to the parameters to
-the `toTumblingWindows` method, except that the `startTime`
-parameter defines the eviction policy for the collection as well as
-the starting point for the windowing transform. Elements with
-timestamps prior to `startTime` will be removed from the source
-collection.
-
-Also, there is no `endTime` parameter in the wrapper's constructor
-like there is in the `toTumblingWindows` method. When iterating
-through windows exposed by the wrapper, the end time is implicitly set
-to the last (most recent) element in the source collection.
-
-Once constructed, the wrapper's `add()` method should be used to add
-elements to the source list.
-
-### Session Window Wrapper
-
-The `SessionWindowCollection<T>` class provides the following constructor:
-
-    public SessionWindowCollection(
-		List<T> source, 
-		TimestampSelector<T> selector,
-		long startTime,
-		long idleThreshold)
+    public WatermarkedTumblingWindowCollection(
+        List<T> sourceCollection, 
+        TimestampSelector<T> timestampSelector,
+        long startTimeMs,
+        long windowDurationMs,
+        WatermarkGenerator generator)
 
 The parameters to this constructor are similar to the parameters to
-the `toTumblingWindows` method, except that the `startTime`
+the `toTumblingWindows` method, except that the `startTimeMs`
 parameter defines the eviction policy for the collection as well as
 the starting point for the windowing transform. Elements with
-timestamps prior to `startTime` will be removed from the source
+timestamps prior to `startTimeMs` will be removed from the source
 collection.
 
-Also, there is no `endTime` parameter in the wrapper's constructor
+Also, there is no `endTimeMs` parameter in the wrapper's constructor
 like there is in the `toTumblingWindows` method. When iterating
-through windows exposed by the wrapper, the end time is implicitly set
-to the last (most recent) element in the source collection.
+through windows exposed by the wrapper, the end time is
+implicitly set to the last (most recent) element in the source
+collection.
 
 Once constructed, the wrapper's `add()` method should be used to add
-elements to the source collection instead of adding elements directly
-to the source collection. If the wrapper's `add()` operation results
-in the creation of a new session window then it may evict elements in
-accordance to the wrapper's `startTime` policy.
+elements to the source list. If an `add()` causes `TimeWindows` to close,
+then those TimeWindows will be returned to the caller of the `add()` method.
+
+Elements that reside exclusively in the closed `TimeWindow` will be evicted.
+
+#### Watermarked Session Window Collection
+
+The `WatermarkedSessionWindowCollection<T>` class provides the following constructor:
+
+    public WatermarkedSessionWindowCollection(
+        List<T> sourceCollection, 
+        TimestampSelector<T> timestampSelector,
+        long startTimeMs,
+        long idleThreshold,
+        WatermarkGenerator generator)
+
+The parameters to this constructor are similar to the parameters to
+the `toSessionWindows` method, except that the `startTimeMs`
+parameter defines the eviction policy for the collection as well as
+the starting point for the windowing transform. Elements with
+timestamps prior to `startTimeMs` will be removed from the source
+collection.
+
+Also, there is no `endTimeMs` parameter in the wrapper's constructor
+like there is in the `toSessionWindows` method. When iterating
+through windows exposed by the wrapper, the end time is
+implicitly set to the last (most recent) element in the source
+collection.
+
+Once constructed, the wrapper's `add()` method should be used to add
+elements to the source list. If an `add()` causes `TimeWindows` to close,
+then those TimeWindows will be returned to the caller of the `add()` method.
+
+Elements that reside exclusively in the closed `TimeWindow` will be evicted.
 
 This library is open source and has no dependencies on other ScaleOut 
 Software products. 
