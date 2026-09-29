@@ -325,6 +325,8 @@ These wrappers perform the following work on your behalf:
 
 #### Watermarked Sliding Window Collection
 
+![WatermarkedSlidingWindowCollection](images/watermarkedslidingwindow.png)
+
 The `WatermarkedSlidingWindowCollection<T>` class provides the following constructor:
 
     public WatermarkedSlidingWindowCollection(
@@ -356,6 +358,8 @@ Elements that reside exclusively in the closed `TimeWindow` will be evicted.
 
 #### Watermarked Tumbling Window Collection
 
+![WatermarkedTumblingWindowCollection](images/watermarkedtumblingwindow.png)
+
 The `WatermarkedTumblingWindowCollection<T>` class provides the following constructor:
 
     public WatermarkedTumblingWindowCollection(
@@ -385,6 +389,8 @@ then those TimeWindows will be returned to the caller of the `add()` method.
 Elements that reside exclusively in the closed `TimeWindow` will be evicted.
 
 #### Watermarked Session Window Collection
+
+![WatermarkedSessionWindowCollection](images/watermarkedsessionwindow.png)
 
 The `WatermarkedSessionWindowCollection<T>` class provides the following constructor:
 
