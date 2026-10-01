@@ -341,8 +341,9 @@ The parameters to this constructor are similar to the parameters to
 the `toSlidingWindows` method, except that the `startTimeMs`
 parameter defines the eviction policy for the collection as well as
 the starting point for the windowing transform--elements with
-timestamps prior to `startTime` will be removed from the source
-collection.
+timestamps prior to `startTimeMs` will be removed from the source
+collection. In addition, a `WatermarkGenerator` callback must be supplied to
+generate the watermark when items are added.
 
 Also, there is no `endTime` parameter in the wrapper's constructor
 like there is in the `toSlidingWindows` method. When iterating
@@ -374,13 +375,14 @@ the `toTumblingWindows` method, except that the `startTimeMs`
 parameter defines the eviction policy for the collection as well as
 the starting point for the windowing transform. Elements with
 timestamps prior to `startTimeMs` will be removed from the source
-collection.
+collection. In addition, a `WatermarkGenerator` callback must be supplied to
+generate the watermark when items are added.
 
 Also, there is no `endTimeMs` parameter in the wrapper's constructor
 like there is in the `toTumblingWindows` method. When iterating
 through windows exposed by the wrapper, the end time is
 implicitly set to the last (most recent) element in the source
-collection.
+collection. 
 
 Once constructed, the wrapper's `add()` method should be used to add
 elements to the source list. If an `add()` causes `TimeWindows` to close,
@@ -406,7 +408,8 @@ the `toSessionWindows` method, except that the `startTimeMs`
 parameter defines the eviction policy for the collection as well as
 the starting point for the windowing transform. Elements with
 timestamps prior to `startTimeMs` will be removed from the source
-collection.
+collection. In addition, a `WatermarkGenerator` callback must be supplied to 
+generate the watermark when items are added.
 
 Also, there is no `endTimeMs` parameter in the wrapper's constructor
 like there is in the `toSessionWindows` method. When iterating
